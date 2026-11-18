@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. B switches between light and dark paper. Home resets the view."></canvas><script>/*
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk up the dome steps to enter, or double-tap its hatch. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
 MIT License
 
 Copyright (c) 2026 siliconjungle
@@ -1401,7 +1401,7 @@ function makePaintedPass(gl,program,mesh,waterShader){
       vec3 p=position;float motion=floor(group);shade=1.-fract(group);
       if(motion==2.||motion==3.){
         vec3 root=motion==2.?dishRoot:birdRoot;float scan=sin(clock*.93+.55);
-        float a=motion==2.?.078*sin(clock*.32):.50*scan/(abs(scan)+.16)+.09*sin(clock*2.);
+        float a=motion==2.?${mesh.turntable?'clock*.17':'.078*sin(clock*.32)'}:.50*scan/(abs(scan)+.16)+.09*sin(clock*2.);
         vec3 d=p-root;p=root+vec3(cos(a)*d.x+sin(a)*d.z,d.y,-sin(a)*d.x+cos(a)*d.z);
         if(motion==3.)p.y+=.018*sin(clock*2.);
       }
@@ -1447,7 +1447,7 @@ function makePaintedPass(gl,program,mesh,waterShader){
     gl.useProgram(pg);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(u.palette,3);
     gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform4f(u.rainMap,rain.left,rain.back,rain.resolution/rain.cols,rain.resolution/rain.rows);
     gl.uniform3fv(u.right,axes[0]);gl.uniform3fv(u.up,axes[1]);gl.uniform3fv(u.eye,axes[2]);gl.uniform3fv(u.focus,focus);
-    gl.uniform3fv(u.dishRoot,world.dishPivot);gl.uniform3fv(u.birdRoot,world.birdPivot);gl.uniform3f(u.walkerFoot,walker.x,walker.y,walker.z);
+    gl.uniform3fv(u.dishRoot,mesh.turntable||world.dishPivot);gl.uniform3fv(u.birdRoot,world.birdPivot);gl.uniform3f(u.walkerFoot,walker.x,walker.y,walker.z);
     gl.uniform3fv(u['ripples[0]'],walker.ripples);gl.uniform2f(u.screen,w,h);gl.uniform1f(u.clock,clock);gl.uniform1f(u.zoom,scale);
     gl.bindBuffer(gl.ARRAY_BUFFER,verts);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,elements);
     for(const [a] of attrs)gl.enableVertexAttribArray(a);
@@ -1467,12 +1467,12 @@ function makeSoftwarePainted(mesh,world){
   const projected=new Float32Array(verts.length/6*4);
   return function(pixels,depth,wet,axes,target,scale,w,h,time,walker){
     const [right,up,eye]=axes;
-    const dish=.078*Math.sin(time*.32),scan=Math.sin(time*.93+.55),bird=.50*scan/(Math.abs(scan)+.16)+.09*Math.sin(time*2);
+    const dish=mesh.turntable?time*.17:.078*Math.sin(time*.32),scan=Math.sin(time*.93+.55),bird=.50*scan/(Math.abs(scan)+.16)+.09*Math.sin(time*2);
     const cosD=Math.cos(dish),sinD=Math.sin(dish),cosB=Math.cos(bird),sinB=Math.sin(bird),bob=.018*Math.sin(time*2);
     for(let i=0,j=0;i<verts.length;i+=6,j+=4){
       let x=verts[i],y=verts[i+1],z=verts[i+2];const group=Math.floor(verts[i+5]);
       if(group===2||group===3){
-        const root=group===2?world.dishPivot:world.birdPivot,c=group===2?cosD:cosB,s=group===2?sinD:sinB;
+        const root=group===2?(mesh.turntable||world.dishPivot):world.birdPivot,c=group===2?cosD:cosB,s=group===2?sinD:sinB;
         const dx=x-root[0],dz=z-root[2];
         x=root[0]+c*dx+s*dz;z=root[2]+c*dz-s*dx;if(group===3)y+=bob;
       }else if(group===5){x+=.022*Math.sin(z*1.9+time*1.13);z+=.013*Math.sin(x+time*.92)}
@@ -3119,6 +3119,7 @@ function orbitalRoost({makeBuilder}) {
     world.painted=painted.finish(world);
     world.alleyWeather=alley.weather;
     world.alleyTint=alley.actorLight;
+    world.hatch={x:hx,threshold:front+.60,face:[hx,1.68,front+.33]};
     world.walkway={land:(x,z)=>Math.max(edge(x,z)<=0?bankHeight(x,z):-Infinity,alley.floor(x,z)),
       edge:(x,z)=>Math.min(edge(x,z),alley.edge(x,z)),waterline,walkingSurfaces,steppingRocks,barriers,solids:alley.solids,spawn:[bridgeX,1.31]};
     world.sunAt=(x,y,z)=>{
@@ -3882,11 +3883,13 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   let canvas=document.querySelector('canvas');
   const scene=orbitalRoost({makeBuilder}),world=scene.build(scene.seed),data=world.data;
   const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x)),mix=(a,b,t)=>t===1?b:a+(b-a)*t;
-  const walker=createRoostWalker(world.walkway),actor=makeRoostCharacter(makeBuilder);
+  const outdoorWalker=createRoostWalker(world.walkway),actor=makeRoostCharacter(makeBuilder);
+  let walker=outdoorWalker,interior=null;
   const rain=makeAlleyRain(world);
   const movementKeys=new Set(),walkCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight']);
   function poseActor(time){
     const p=walker.state;
+    if(interior){actor.pose(p,time,.91,interior.light(p.x,p.y+.82,p.z));return}
     actor.pose(p,time,world.sunAt(p.x,p.y+.82,p.z),world.alleyTint(p.x,p.y+.82,p.z));
   }
   const home={yaw:-.22,pitch:.39,zoom:1.13,target:[5.94,2.08,0]},maxZoom=7.4;
@@ -3903,6 +3906,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     return (reach+.10)*2.10;
   });
   function fitScale(){
+    if(interior)return Math.min(w/16.95,h/10.05);
     const i=clamp((camera.pitch-.065)/(1.34-.065)*32,0,32),k=Math.floor(i);
     return Math.min(w/23.9,h/mix(framing[k],framing[Math.min(32,k+1)],i-k));
   }
@@ -4038,6 +4042,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     const ga=[['center',3,0],['rgb',3,12],['params',2,24]].map(([n,size,off])=>[gl.getAttribLocation(gp,n),size,off]);
     const gu={};for(const n of ['right','up','eye','focus','birdRoot','dishRoot','screen','zoom','clock'])gu[n]=gl.getUniformLocation(gp,n);
     function bind(buffer,attributes,stride){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);for(const [a,n,o] of attributes){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,stride,o)}}
+    let roomPaint,roomLight,roomMotes;
     let rw=0,rh=0,lastReflection=-2,oldPose='';
     function uniforms(us,axes,sw,sh,scale,time){gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
     return {resize(){
@@ -4054,6 +4059,23 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
       gl.bufferSubData(gl.ARRAY_BUFFER,packed.byteLength,actor.packed);
       gl.uniform3f(u.feet,walker.state.x,walker.state.y,walker.state.z);
       gl.uniform3fv(u.ripples,walker.state.ripples);
+      if(interior){
+        roomPaint??=makePaintedPass(gl,program,interior.mesh,waterShader);
+        roomLight??=makeInteriorLightPass(gl,program,interior,sketch.color);
+        roomMotes??=makeMotePass(gl,program,interior.motes,sketch.color);
+        gl.bindFramebuffer(gl.FRAMEBUFFER,sketch.framebuffer);gl.viewport(0,0,w,h);
+        gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+        gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,blank);
+        gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,blank);
+        gl.useProgram(pg);bind(buf,attrs,52);uniforms(u,axes,w,h,scale,time);
+        gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform1f(u.reflectPass,0);
+        gl.drawArrays(gl.POINTS,world.count,actor.count);
+        for(const [a] of attrs)gl.disableVertexAttribArray(a);
+        roomPaint(axes,camera.target,scale,w,h,time,world,walker.state,rain);
+        roomLight(axes,camera.target,scale,w,h);
+        roomMotes(axes,camera.target,scale,w,h,time);
+        return;
+      }
       rain.prepare(time);rainPass.bindField(time);gl.uniform1i(u.rainField,1);
       gl.uniform4f(u.rainMap,rain.left,rain.back,rain.resolution/rain.cols,rain.resolution/rain.rows);
       gl.activeTexture(gl.TEXTURE0);gl.uniform1i(u.reflection,0);
@@ -4076,15 +4098,15 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   }
   // Use the same baked 3D world and camera when a browser has no GPU context.
   function cpu(el){
-    const drawPainted=makeSoftwarePainted(world.painted,world);
+    const drawPainted=makeSoftwarePainted(world.painted,world);let roomPaint;
     const ctx=el.getContext('2d',{alpha:false});let image,pixels,zbuf,original,wet,nightBloom;
     const radii=Float32Array.from({length:world.count},(_,i)=>Math.sqrt(Math.max(data[i*16+4],data[i*16+8],data[i*16+10])));
     return {software:true,resize(){nightBloom=makeSoftwareNightBloom(w,h);image=ctx.createImageData(w,h);pixels=new Uint32Array(image.data.buffer);zbuf=new Float32Array(w*h);wet=new Uint8Array(w*h);original=new Uint32Array(w*h)},draw(time){
-      rain.prepare(time);wet.fill(0);
+      if(!interior)rain.prepare(time);wet.fill(0);
       pixels.fill(0xff000000);zbuf.fill(-40);const axes=cameraAxes(),[r,u,e]=axes,s=unit*camera.zoom,t=camera.target;
       const cosD=Math.cos(.078*Math.sin(time*.32)),sinD=Math.sin(.078*Math.sin(time*.32));
       const phase=Math.sin(time*.93+.55),turn=.50*phase/(Math.abs(phase)+.16)+.09*Math.sin(time*2),cosB=Math.cos(turn),sinB=Math.sin(turn);
-      for(let i=0;i<world.count+actor.count;i++){
+      for(let i=interior?world.count:0;i<world.count+actor.count;i++){
         if(i<world.count&&world.painted.covered[i])continue;
         const character=i>=world.count,m=character?7:world.mode[i]&15;
         const k=character?(i-world.count)*13:16*i,source=character?actor.packed:data;
@@ -4118,6 +4140,13 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
           const off=yy*w+xx;if(depth>=zbuf[off]&&(xx+.5-px)**2+(yy+.5-py)**2<rad*rad){pixels[off]=c;zbuf[off]=depth;wet[off]=m===9?1:0}
         }
       }
+      if(interior){
+        if(!roomPaint)roomPaint=makeSoftwarePainted(interior.mesh,world);
+        roomPaint(pixels,zbuf,wet,axes,t,s,w,h,time,walker.state);
+        softwareInteriorLight(interior,pixels,zbuf,axes,t,s,w,h);
+        drawSoftwareMotes(interior.motes,pixels,zbuf,axes,t,s,w,h,time);
+        ctx.putImageData(image,0,0);return;
+      }
       drawPainted(pixels,zbuf,wet,axes,t,s,w,h,time,walker.state);
       refractSoftwarePuddles(rain,pixels,original,wet,axes,t,s,w,h);
       for(const [cx,cy,cz,size,R,G,B,phase] of world.steam){
@@ -4147,10 +4176,10 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     unit=fitScale();poseActor(age);renderer.resize();renderer.draw(age);dirty=true;
     if(down.size>=2)beginPair();
   }
-  function reset(){Object.assign(goal,home,{target:[...home.target]});velocity=0;dirty=true}
+  function reset(){const view=interior?interior.home:home;Object.assign(goal,view,{target:[...view.target]});velocity=0;dirty=true}
   const down=new Map(),dragSurface=document.body;
   let lastMove=0,pair=null,moved=false,lastTap=null;
-  const targetLimit=(v,i)=>clamp(v,[-5.3,-.8,-5.3][i],[17.4,7.5,5.3][i]);
+  const targetLimit=(v,i)=>interior?clamp(v,[-7,-.8,-3.9][i],[7,4.3,4.5][i]):clamp(v,[-5.3,-.8,-5.3][i],[17.4,7.5,5.3][i]);
   function beginPair(){
     const [a,b]=down.values(),bounds=canvas.getBoundingClientRect();
     const [right,up]=cameraAxes();
@@ -4177,7 +4206,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     if((span<=4&&length>4)||goal.zoom!==requestedZoom||goal.target.some((v,i)=>v!==requestedTarget[i]))beginPair();
   }
   dragSurface.addEventListener('pointerdown',e=>{
-    if(e.button!==0&&e.button!==1&&e.button!==2)return;
+    if(switching||(e.button!==0&&e.button!==1&&e.button!==2))return;
     if(e.pointerType==='mouse')e.preventDefault();
     canvas.focus({preventScroll:true});dragSurface.setPointerCapture(e.pointerId);
     down.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,touch:e.pointerType==='touch',orbitReady:false});
@@ -4207,12 +4236,93 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     }dirty=true;
   });
   const TAU=Math.PI*2;
+  let loadedRoom=null,roomFile=null,savedView=null,switching=false,wantInside=false,revision=0,iris=null;
+  const copyView=view=>({...view,target:[...view.target]});
+  const outsideLabel=canvas.getAttribute('aria-label');
+  const insideLabel='A cutaway view inside the relay dome. Explore the chart room, radio workshop and keeper’s quarters. W and S move, A and D turn, and Shift with W runs. Drag to orbit, middle-drag to pan, or use two fingers to pan and pinch. Walk through the illuminated front sill, double-tap it, or press Escape to return outside.';
+  function loadRoom(){
+    if(loadedRoom)return Promise.resolve(loadedRoom);
+    if(!roomFile){
+      roomFile=new Promise((resolve,reject)=>{
+        const tag=document.createElement('script');tag.src=new URL('dome-interior.js',document.baseURI);
+        const fail=()=>{clearTimeout(timeout);tag.remove();roomFile=null;reject(new Error('Interior unavailable'))};
+        const timeout=setTimeout(fail,15000);
+        tag.onerror=fail;
+        tag.onload=()=>{clearTimeout(timeout);try{loadedRoom=createRelayInterior(makePaintedGeometry);resolve(loadedRoom)}catch(err){console.error(err);fail()}};
+        document.head.append(tag);
+      });
+    }
+    return roomFile;
+  }
+  function projected(p){
+    const q=p.map((n,i)=>n-camera.target[i]),[r,u]=cameraAxes(),s=unit*camera.zoom;
+    return [innerWidth*(.5+(q[0]*r[0]+q[2]*r[2])*s/w),innerHeight*(.5-(q[0]*u[0]+q[1]*u[1]+q[2]*u[2])*s/h)];
+  }
+  function hatchPoint(){return interior?interior.exit:world.hatch.face}
+  async function shutter(open){
+    if(motionQuery.matches||!canvas.animate)return;
+    const [x,y]=projected(hatchPoint()),cx=clamp(x/innerWidth*100,4,96),cy=clamp(y/innerHeight*100,4,96);
+    const clip=r=>'circle('+r+' at '+cx+'% '+cy+'%)';
+    const stages=[{clipPath:clip('152vmax'),filter:'brightness(1)'},{clipPath:clip('0vmax'),filter:'brightness(1.28)'}];
+    const animation=canvas.animate(open?stages.reverse():stages,{duration:open?550:370,easing:open?'cubic-bezier(.13,.61,.34,1)':'cubic-bezier(.52,0,.82,.48)',fill:'forwards'});
+    iris=animation;try{await animation.finished}catch{}
+  }
+  function syncHash(inside,replace=false){
+    const url=new URL(location.href);url.hash=inside?'dome':'';
+    if(url.href!==location.href)try{history[replace?'replaceState':'pushState'](null,'',url)}catch{location.hash=url.hash}
+  }
+  function roomStatus(text){
+    const status=document.createElement('div');status.className='room-status';status.setAttribute('role','status');status.textContent=text;
+    document.body.append(status);setTimeout(()=>status.remove(),5000);
+  }
+  async function changeRoom(inside,writeHash=true){
+    if(wantInside===inside&&(switching||Boolean(interior)===inside))return;
+    const id=++revision,before={level:interior,walker,view:copyView(camera)};wantInside=inside;iris?.cancel();iris=null;
+    releaseMovement();switching=true;
+    try{
+      if(Boolean(interior)!==inside){
+        const [level]=await Promise.all([inside?loadRoom():null,shutter(false)]);
+        if(id!==revision)return;
+        if(inside){
+          savedView=copyView(camera);interior=level;walker=createRoostWalker(level.walkway);walker.state.yaw=Math.PI;
+          Object.assign(camera,copyView(level.home));
+        }else{
+          interior=null;walker=outdoorWalker;const p=walker.state,d=world.hatch;
+          p.x=d.x;p.z=d.threshold+.21;p.floor=p.y=walker.ground(p.x,p.z);p.yaw=0;walker.stop();p.ripples.fill(0);
+          Object.assign(camera,copyView(savedView||home));
+        }
+        Object.assign(goal,copyView(camera));unit=fitScale();poseActor(age);renderer.draw(age);
+        if(writeHash)syncHash(inside);
+        canvas.dataset.scene=inside?'dome':'islands';canvas.setAttribute('aria-label',inside?insideLabel:outsideLabel);iris?.cancel();iris=null;
+        await shutter(true);
+      }else if(writeHash)syncHash(inside);
+    }catch(err){
+      if(id!==revision)return;
+      interior=before.level;walker=before.walker;
+      Object.assign(camera,copyView(before.view));Object.assign(goal,copyView(before.view));unit=fitScale();
+      if(!interior&&Math.abs(walker.state.x-world.hatch.x)<.37&&walker.state.z<=world.hatch.threshold){
+        const p=walker.state;p.z=world.hatch.threshold+.18;p.floor=p.y=walker.ground(p.x,p.z);
+      }
+      wantInside=!!interior;syncHash(wantInside,true);
+      roomStatus('The dome could not open. Try its hatch again.');
+      console.warn(err);
+    }finally{if(id===revision){iris?.cancel();iris=null;switching=false;dirty=true}}
+  }
+  function followLocation(){changeRoom(location.hash==='#dome',false);}
+  addEventListener('popstate',followLocation);addEventListener('hashchange',followLocation);
+  function atHatch(x,y){
+    const [px,py]=projected(hatchPoint()),s=unit*camera.zoom*innerWidth/w;
+    const minimum=matchMedia('(pointer: coarse)').matches?17:9;
+    return ((x-px)/Math.max(minimum,.47*s))**2+((y-py)/Math.max(minimum+1,.63*s))**2<1;
+  }
   function focusPoint(clientX,clientY){
+    if(atHatch(clientX,clientY)){changeRoom(!interior);return}
     const [r,u,e]=cameraAxes(),s=unit*camera.zoom,px=(clientX/innerWidth-.5)*w,py=(.5-clientY/innerHeight)*h;
     let nearest=-Infinity,pt=null,limit=(Math.max(4,w/135))**2;
-    for(let i=0;i<world.count;i+=2){const k=i*16,x=data[k]-camera.target[0],y=data[k+1]-camera.target[1],z=data[k+2]-camera.target[2],
+    const points=interior?interior.mesh.vertices:data,stride=interior?6:16;
+    for(let k=0;k<points.length;k+=stride*2){const x=points[k]-camera.target[0],y=points[k+1]-camera.target[1],z=points[k+2]-camera.target[2],
       dx=(x*r[0]+z*r[2])*s-px,dy=(x*u[0]+y*u[1]+z*u[2])*s-py,depth=x*e[0]+y*e[1]+z*e[2];
-      if(dx*dx+dy*dy<limit&&depth>nearest){nearest=depth;pt=[data[k],data[k+1],data[k+2]]}
+      if(dx*dx+dy*dy<limit&&depth>nearest){nearest=depth;pt=[points[k],points[k+1],points[k+2]]}
     }
     for(let i=0;i<actor.count;i+=3){
       const k=i*13,x=actor.packed[k]-camera.target[0],y=actor.packed[k+1]-camera.target[1],z=actor.packed[k+2]-camera.target[2],
@@ -4251,29 +4361,34 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   addEventListener('keyup',e=>movementKeys.delete(e.code));
   addEventListener('keydown',e=>{
     if(e.altKey||e.metaKey||e.ctrlKey)return;
+    if(e.key==='Escape'&&(interior||switching)){e.preventDefault();changeRoom(false);return}
+    if(switching)return;
     if(walkCodes.has(e.code)){
       movementKeys.add(e.code);
       if(!e.code.startsWith('Shift'))e.preventDefault();
       dirty=true;return;
     }
     let handled=true;
-    switch(e.key){case 'b':case 'B':if(!e.repeat)darkPaper=!darkPaper;break;case 'ArrowLeft':goal.yaw-=.13;break;case 'ArrowRight':goal.yaw+=.13;break;case 'ArrowUp':goal.pitch=clamp(goal.pitch+.08,.065,1.34);break;case 'ArrowDown':goal.pitch=clamp(goal.pitch-.08,.065,1.34);break;case '+':case '=':goal.zoom=clamp(goal.zoom*1.18,.68,maxZoom);break;case '-':goal.zoom=clamp(goal.zoom/1.18,.68,maxZoom);break;case 'Home':case 'Escape':case '0':reset();break;default:handled=false}
+    switch(e.key){case 'b':case 'B':if(!interior&&!e.repeat)darkPaper=!darkPaper;break;case 'ArrowLeft':goal.yaw-=.13;break;case 'ArrowRight':goal.yaw+=.13;break;case 'ArrowUp':goal.pitch=clamp(goal.pitch+.08,.065,1.34);break;case 'ArrowDown':goal.pitch=clamp(goal.pitch-.08,.065,1.34);break;case '+':case '=':goal.zoom=clamp(goal.zoom*1.18,.68,maxZoom);break;case '-':goal.zoom=clamp(goal.zoom/1.18,.68,maxZoom);break;case 'Home':case 'Escape':case '0':reset();break;default:handled=false}
     if(handled){e.preventDefault();velocity=0;dirty=true}
   });
   function update(ts){
     requestAnimationFrame(update);const interval=renderer.software?1000/18:1000/45;
-    if(document.hidden||ts-frameStamp<interval-1)return;const dt=frameStamp<0?0:Math.min((ts-frameStamp)/1000,.075);frameStamp=ts;
+    if(switching||document.hidden||ts-frameStamp<interval-1)return;const dt=frameStamp<0?0:Math.min((ts-frameStamp)/1000,.075);frameStamp=ts;
     if(!down.size&&Math.abs(velocity)>.008&&!motionQuery.matches){goal.yaw+=velocity*dt;velocity*=Math.exp(-9.0*dt);dirty=true}
     const f=motionQuery.matches||down.values().next().value?.touch?1:1-Math.exp(-17*dt);let dif=0;
     for(const key of ['zoom','yaw','pitch']){dif+=Math.abs(goal[key]-camera[key]);camera[key]=mix(camera[key],goal[key],f)}
     for(let i=0;i<3;i++){dif+=Math.abs(goal.target[i]-camera.target[i]);camera.target[i]=mix(camera.target[i],goal.target[i],f)}
     const ripples=walker.state.ripples;
     if(movementKeys.size||walker.state.speed||walker.state.turn||walker.state.stride||ripples[2]||ripples[5]||ripples[8]||Math.abs(walker.state.y-walker.state.floor)>.001){
-      walker.update(dt,movementKeys);dirty=true;
+      const p=walker.state,oldZ=p.z;walker.update(dt,movementKeys);dirty=true;
+      if(interior){
+        if(Math.abs(p.x)<.62&&oldZ<3.88&&p.z>=3.88){changeRoom(false);return}
+      }else if(Math.abs(p.x-world.hatch.x)<.37&&oldZ>world.hatch.threshold&&p.z<=world.hatch.threshold){changeRoom(true);return}
     }
     if(!motionQuery.matches)age+=dt;
     if(dirty||dif>.00005||!motionQuery.matches){unit=fitScale();poseActor(age);renderer.draw(age);dirty=false}
   }
-  addEventListener('resize',resize);resize();requestAnimationFrame(update);
+  addEventListener('resize',resize);resize();canvas.dataset.scene='islands';followLocation();requestAnimationFrame(update);
 })();
 </script></body></html>
