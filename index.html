@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk up the dome steps to enter, or double-tap its hatch. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk into the dome hatch or the red door beneath the alley lanterns. Double-click or double-tap either door to enter. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
 MIT License
 
 Copyright (c) 2026 siliconjungle
@@ -1542,6 +1542,8 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
   const ink=[43,45,61],iron=[81,105,114],steel=[129,154,151],tile=[122,132,149],wood=[142,100,70],wine=[149,77,83];
   const pink=[246,66,142],cherry=[255,77,112],cyan=[52,232,219],ice=[181,255,241],violet=[133,109,255],amber=[255,154,74],paper=[255,205,146];
   const solids=[],lights=[],steam=[],eaves=[];
+  const door={x:11.84,threshold:-.72,face:[11.84,1.48,-.96],halfWidth:.41};
+  const onStep=(x,z)=>Math.abs(x-door.x)<.61&&z>-1.20&&z<-.52;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const blend=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*clamp(t,0,1));
   const frac=v=>v-Math.floor(v);
@@ -1578,7 +1580,7 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
     (Math.abs(x-(right+left)/2)+Math.abs(z-(front+back)/2)-(right-left+front-back)/2+cut)/Math.SQRT2);
   const bridgeEdge=(x,z)=>Math.max(bx-x,x-ex,Math.abs(z-bz)-bw);
   const deck=x=>{const t=clamp((x-bx)/(ex-bx),0,1);return .54+.12*t+.15*Math.sin(Math.PI*t)};
-  function floor(x,z){return Math.max(streetEdge(x,z)<=0?y0:-Infinity,bridgeEdge(x,z)<=0?deck(x):-Infinity)}
+  function floor(x,z){return Math.max(streetEdge(x,z)<=0?y0+(onStep(x,z)?.075:0):-Infinity,bridgeEdge(x,z)<=0?deck(x):-Infinity)}
   function solid(x,z,w,d){solids.push({left:x-w/2,right:x+w/2,back:z-d/2,front:z+d/2})}
   function light(x,y,z,color,power=1,reach=1.5,halo=.27){
     const radiance=color.map(c=>(c/255)**1.9);
@@ -2005,14 +2007,45 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
   for(const [x,z,w,col] of [[12.35,-1.183,1.80,cyan],[15.14,-1.12,2.32,violet]]){
     box(x,1.52,z,w,1.53,.101,ink,.15);
     if(x<13){
-      // Backlit shoji flank a dark, open doorway below the bathhouse curtain.
-      for(const side of [-1,1]){
-        const cx=x+side*.54;
-        panel(cx,1.57,z+.064,.51,1.12,[220,139,103],true);
-        for(let k=-1;k<=1;k++)line([cx+k*.15,1.04,z+.084],[cx+k*.15,2.11,z+.084],.014,wood);
-        for(let k=0;k<5;k++)line([cx-.245,1.11+k*.211,z+.083],[cx+.245,1.11+k*.211,z+.083],.016,wood);
-      }
-      noren(x,2.14,z+.115,.56,[50,71,104],3);
+      // One sidelight and one full-size, outward-swinging enamel door. The
+      // dark reveal and sliver of light under the latch are visible on an orbit.
+      const cx=door.x,hinge=cx-.495,base=y0+.077,high=2.235;
+      panel(12.99,1.59,z+.060,.44,1.08,[163,107,85],true);
+      for(const off of [-.12,.08])line([12.99+off,1.04,z+.083],[12.99+off,2.13,z+.083],.018,wood);
+      for(let k=0;k<4;k++)line([12.77,1.19+k*.235,z+.085],[13.21,1.19+k*.235,z+.085],.018,wood);
+      box(cx,1.49,z+.062,1.16,1.58,.11,soot,.065);
+      for(const side of [-1,1])box(cx+side*.55,1.49,z+.140,.083,1.64,.145,sheet([161,141,112],2),.045);
+      box(cx,high+.035,z+.140,1.18,.095,.16,sheet(bare,5),.05);
+      panel(cx+.40,1.46,z+.132,.14,1.39,[221,143,65],true);
+      const doorPoint=(u,y,out=0)=>[hinge+.959*u-.284*out,y,z+.175+.284*u+.959*out];
+      const leaf=(l,r,b,t,col,out=0,emit=false,step=.033)=>quad(doorPoint(l,b,out),doorPoint(r,b,out),doorPoint(r,t,out),doorPoint(l,t,out),col,step,.036,emit);
+      // Bake the warm jamb light into the red enamel. This preserves its local
+      // color under the much larger cyan sign just above the awning.
+      const enamelAt=(u,v,p)=>{
+        const grit=n3(p[0]*17,p[1]*21,p[2]*11),wash=n3(u*5.4,v*3.3,11);
+        const lit=.53+.42*v+.15*wash,edge=Math.min(u,1-u,v,1-v);
+        const chip=clamp((.047-edge)*12+(grit-.64)*1.9+(wash-.62)*1.2,0,.82);
+        return blend([141*lit+7*grit,55*lit+13*grit,46*lit+13*grit],[111,105,90],chip);
+      };
+      leaf(0,1.00,base+.028,high-.046,enamelAt,0,true);
+      quad(doorPoint(1.00,base+.028),doorPoint(1.00,base+.028,-.058),doorPoint(1.00,high-.046,-.058),doorPoint(1.00,high-.046),sheet([110,85,62]),.047);
+      leaf(.105,.889,1.47,2.065,sheet(bare,12),.010);
+      leaf(.149,.849,1.52,2.02,(u,v,p)=>blend([175,107,63],[255,202,126],.31+.39*v+.27*n3(28*u,p[1]*14,7)),.022,true);
+      for(const t of [.38,.62])line(doorPoint(t,1.52,.028),doorPoint(t,2.02,.028),.013,wood);
+      line(doorPoint(.15,1.77,.029),doorPoint(.85,1.77,.029),.014,wood);
+      leaf(.09,.91,base+.07,base+.27,(u,v,p)=>blend([70,78,80],[122,124,106],.42*v+.47*n3(p[0]*7,p[1]*15,12)),.018,true);
+      leaf(.13,.66,1.09,1.32,(u,v)=>blend([68,37,34],[114,51,39],.26+.65*v),.012,true);
+      leaf(.78,.91,1.16,1.46,[186,169,129],.023);
+      line(doorPoint(.85,1.36,.026),doorPoint(.85,1.36,.098),.031,bare);
+      line(doorPoint(.85,1.36,.098),doorPoint(.65,1.36,.098),.035,[225,204,150]);
+      line(doorPoint(.85,1.378,.101),doorPoint(.65,1.378,.101),.013,[196,181,150],true);
+      line(doorPoint(.12,base+.034,.011),doorPoint(.95,base+.034,.011),.008,[222,151,84],true);
+      for(const y of [.95,1.92])line(doorPoint(.018,y,.018),doorPoint(.018,y+.13,.018),.032,steel);
+      box(cx,y0+.038,-.86,1.23,.075,.67,sheet([177,161,130]),.052);
+      for(let j=0;j<8;j++)box(cx-.29+j*.082,y0+.081,-.68,.036,.011,.19,iron,.05);
+      box(cx,2.28,z+.202,.58,.093,.18,sheet(wood),.044);
+      line([cx-.23,2.24,z+.289],[cx+.23,2.24,z+.289],.023,paper,true);
+      light(cx,1.82,-.58,[255,172,87],1.32,1.07,.14);
     }else{
       for(let j=0;j<13;j++){
         const y=.88+j*.099;
@@ -2307,7 +2340,7 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
     ellipsoid(tip,[.004,.004,.004],[58,67,52],.004);
   }
   const weather={left,right,back,front,floorY:y0,streetEdge,eaves,lights};
-  return {floor,edge:(x,z)=>Math.min(streetEdge(x,z),bridgeEdge(x,z)),solids,steam,lightSurfaces,actorLight,weather};
+  return {floor,door,edge:(x,z)=>Math.min(streetEdge(x,z),bridgeEdge(x,z)),solids,steam,lightSurfaces,actorLight,weather};
 }
 if(typeof module!=='undefined'&&module.exports)module.exports=buildNeonAlley;
 
@@ -3125,6 +3158,7 @@ function orbitalRoost({makeBuilder}) {
     world.painted=painted.finish(world);
     world.alleyWeather=alley.weather;
     world.alleyTint=alley.actorLight;
+    world.alleyDoor=alley.door;
     world.hatch={x:hx,threshold:front+.60,face:[hx,1.68,front+.33]};
     world.walkway={land:(x,z)=>Math.max(edge(x,z)<=0?bankHeight(x,z):-Infinity,alley.floor(x,z)),
       edge:(x,z)=>Math.min(edge(x,z),alley.edge(x,z)),waterline,walkingSurfaces,steppingRocks,barriers,solids:alley.solids,spawn:[bridgeX,1.31]};
@@ -3574,7 +3608,7 @@ function makeRoostCharacter(makeBuilder){
       m[9+i]=parent[9+i]+(parent[r]-m[r])*pivot[0]+(parent[r+1]-m[r+1])*pivot[1]+(parent[r+2]-m[r+2])*pivot[2];
     }
   }
-  function pose(p,time,illumination,tint=[1,1,1]){
+  function pose(p,time,illumination,tint=[1,1,1],localLights){
     const swing=Math.sin(p.phase),beat=Math.cos(p.phase*2),g=p.stride,run=p.run;
     const bob=(1-beat)*.016*g+.003*(1-g)*Math.sin(time*2.2);
     setBone(hips,0,p.yaw,0,[p.x/scale,p.y/scale+bob,p.z/scale]);
@@ -3618,8 +3652,15 @@ function makeRoostCharacter(makeBuilder){
       const nx=m[0]*lx+m[1]*ly+m[2]*lz,ny=m[3]*lx+m[4]*ly+m[5]*lz,nz=m[6]*lx+m[7]*ly+m[8]*lz;
       const sun=Math.max(0,-.48*nx+.78*ny+.42*nz),brightness=(.66+.31*sun+.051*Math.max(0,ny))*illumination;
       const pigment=r[k+7]|0;
-      packed[j+3]=(pigment&255)*brightness*tint[0]/255;packed[j+4]=(pigment>>8&255)*brightness*tint[1]/255;
-      packed[j+5]=(pigment>>16&255)*(brightness+.022*(1-sun))*tint[2]/255;
+      let red=tint[0],green=tint[1],blue=tint[2];
+      if(localLights)for(const lamp of localLights){
+        const dx=lamp[0]-packed[j],dy=lamp[1]-packed[j+1],dz=lamp[2]-packed[j+2],distance2=dx*dx+dy*dy+dz*dz;
+        const facing=(nx*dx+ny*dy+nz*dz)/Math.sqrt(distance2+.001);
+        const gain=Math.exp(-distance2*lamp[3])*Math.max(0,.23+.77*facing);
+        red+=gain*lamp[4];green+=gain*lamp[5];blue+=gain*lamp[6];
+      }
+      packed[j+3]=(pigment&255)*brightness*red/255;packed[j+4]=(pigment>>8&255)*brightness*green/255;
+      packed[j+5]=(pigment>>16&255)*(brightness+.022*(1-sun))*blue/255;
       // All actor surfels are axially symmetric discs. Rotating the normal
       // reconstructs their covariance exactly and works on either renderer.
       const width=(r[k+4]+r[k+8]+r[k+10])/(2+.32*.32)*scale*scale*stretch*stretch,delta=width*(.32*.32-1);
@@ -3895,7 +3936,11 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   const movementKeys=new Set(),walkCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight']);
   function poseActor(time){
     const p=walker.state;
-    if(interior){actor.pose(p,time,.91,interior.light(p.x,p.y+.82,p.z));return}
+    if(interior){
+      interior.animate?.(time);
+      const local=interior.actorLighting?.(p.x,p.y+.82,p.z);
+      actor.pose(p,time,.91,local?.ambient||interior.light(p.x,p.y+.82,p.z),local?.points);return;
+    }
     actor.pose(p,time,world.sunAt(p.x,p.y+.82,p.z),world.alleyTint(p.x,p.y+.82,p.z));
   }
   const home={yaw:-.22,pitch:.39,zoom:1.13,target:[5.94,2.08,0]},maxZoom=7.4;
@@ -4058,7 +4103,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     const ga=[['center',3,0],['rgb',3,12],['params',2,24]].map(([n,size,off])=>[gl.getAttribLocation(gp,n),size,off]);
     const gu={};for(const n of ['right','up','eye','focus','birdRoot','dishRoot','screen','zoom','clock'])gu[n]=gl.getUniformLocation(gp,n);
     function bind(buffer,attributes,stride){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);for(const [a,n,o] of attributes){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,stride,o)}}
-    let roomPaint,roomLight,roomMotes;
+    const roomPasses=new WeakMap();
     let rw=0,rh=0,lastReflection=-2,oldPose='';
     function uniforms(us,axes,sw,sh,scale,time){gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
     return {resize(){
@@ -4076,9 +4121,11 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
       gl.uniform3f(u.feet,walker.state.x,walker.state.y,walker.state.z);
       gl.uniform3fv(u.ripples,walker.state.ripples);
       if(interior){
-        roomPaint??=makePaintedPass(gl,program,interior.mesh,waterShader);
-        roomLight??=makeInteriorLightPass(gl,program,interior,sketch.color);
-        roomMotes??=makeMotePass(gl,program,interior.motes,sketch.color);
+        let passes=roomPasses.get(interior);
+        if(!passes){
+          passes={paint:makePaintedPass(gl,program,interior.mesh,waterShader),light:makeInteriorLightPass(gl,program,interior,sketch.color),motes:makeMotePass(gl,program,interior.motes,sketch.color)};
+          roomPasses.set(interior,passes);
+        }
         gl.bindFramebuffer(gl.FRAMEBUFFER,sketch.framebuffer);gl.viewport(0,0,w,h);
         gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
         gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,blank);
@@ -4087,9 +4134,9 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
         gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform1f(u.reflectPass,0);
         gl.drawArrays(gl.POINTS,world.count,actor.count);
         for(const [a] of attrs)gl.disableVertexAttribArray(a);
-        roomPaint(axes,camera.target,scale,w,h,time,world,walker.state,rain);
-        roomLight(axes,camera.target,scale,w,h);
-        roomMotes(axes,camera.target,scale,w,h,time);
+        passes.paint(axes,camera.target,scale,w,h,time,world,walker.state,rain);
+        passes.light(axes,camera.target,scale,w,h);
+        passes.motes(axes,camera.target,scale,w,h,time);
         return;
       }
       rain.prepare(time);rainPass.bindField(time);gl.uniform1i(u.rainField,1);
@@ -4114,7 +4161,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   }
   // Use the same baked 3D world and camera when a browser has no GPU context.
   function cpu(el){
-    const drawPainted=makeSoftwarePainted(world.painted,world);let roomPaint;
+    const drawPainted=makeSoftwarePainted(world.painted,world),roomPasses=new WeakMap();
     const ctx=el.getContext('2d',{alpha:false});let image,pixels,zbuf,original,wet,nightBloom;
     const radii=Float32Array.from({length:world.count},(_,i)=>Math.sqrt(Math.max(data[i*16+4],data[i*16+8],data[i*16+10])));
     return {software:true,resize(){nightBloom=makeSoftwareNightBloom(w,h);image=ctx.createImageData(w,h);pixels=new Uint32Array(image.data.buffer);zbuf=new Float32Array(w*h);wet=new Uint8Array(w*h);original=new Uint32Array(w*h)},draw(time){
@@ -4130,7 +4177,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
         let radius;
         if(character){
           radius=Math.sqrt(Math.max(source[k+6],source[k+9],source[k+11]));
-          col=(255*source[k+3]|0)|((255*source[k+4]|0)<<8)|((255*source[k+5]|0)<<16);
+          col=(Math.min(255,255*source[k+3])|0)|(Math.min(255,255*source[k+4])<<8)|(Math.min(255,255*source[k+5])<<16);
         }else{
           radius=radii[i];const p=walker.state;
           if((m<2||m===9)&&Math.abs(x-p.x)<.8&&Math.abs(z-p.z)<.7&&Math.abs(y-p.y)<.30){
@@ -4157,7 +4204,8 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
         }
       }
       if(interior){
-        if(!roomPaint)roomPaint=makeSoftwarePainted(interior.mesh,world);
+        if(!roomPasses.has(interior))roomPasses.set(interior,makeSoftwarePainted(interior.mesh,world));
+        const roomPaint=roomPasses.get(interior);
         roomPaint(pixels,zbuf,wet,axes,t,s,w,h,time,walker.state);
         softwareInteriorLight(interior,pixels,zbuf,axes,t,s,w,h);
         drawSoftwareMotes(interior.motes,pixels,zbuf,axes,t,s,w,h,time);
@@ -4252,87 +4300,110 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     }dirty=true;
   });
   const TAU=Math.PI*2;
-  let loadedRoom=null,roomFile=null,savedView=null,switching=false,wantInside=false,revision=0,iris=null;
-  const copyView=view=>({...view,target:[...view.target]});
+  const alleyView={target:[11.93,1.73,-.91],yaw:-.095,pitch:.16,zoom:4.6};
+  const doors={
+    dome:{...world.hatch,halfWidth:.37,file:'dome-interior.js',build:()=>createRelayInterior(makePaintedGeometry),label:'The relay dome, with its chart room, receiver gallery and keeper’s quarters.'},
+    backrooms:{...world.alleyDoor,file:'alley-interior.js',build:()=>createAlleyInterior(makePaintedGeometry),label:'Two rooms behind the alley door. A green CRT lights the salvage shop. The passage beside the parts rack leads to a rented room.'}
+  };
+  let activeRoom='',wantedRoom='',savedView=null,switching=false,revision=0,iris=null;
+  const roomFiles=new Map(),copyView=view=>({...view,target:[...view.target]});
   const outsideLabel=canvas.getAttribute('aria-label');
-  const insideLabel='A cutaway view inside the relay dome. Explore the chart room, long receiver gallery, round tuning bay and keeper’s quarters. W and S move, A and D turn, and Shift with W runs. Drag to orbit, middle-drag to pan, or use two fingers to pan and pinch. Walk through the illuminated front sill, double-tap it, or press Escape to return outside.';
-  function loadRoom(){
-    if(loadedRoom)return Promise.resolve(loadedRoom);
-    if(!roomFile){
-      roomFile=new Promise((resolve,reject)=>{
-        const tag=document.createElement('script');tag.src=new URL('dome-interior.js',document.baseURI);
-        const fail=()=>{clearTimeout(timeout);tag.remove();roomFile=null;reject(new Error('Interior unavailable'))};
-        const timeout=setTimeout(fail,15000);
-        tag.onerror=fail;
-        tag.onload=()=>{clearTimeout(timeout);try{loadedRoom=createRelayInterior(makePaintedGeometry);resolve(loadedRoom)}catch(err){console.error(err);fail()}};
-        document.head.append(tag);
-      });
-    }
-    return roomFile;
+  const roomControls=' W and S move, A and D turn, and Shift with W runs. Drag to orbit, middle-drag to pan, or use two fingers to pan and pinch. Walk through the entrance, double-tap it, or press Escape to go outside.';
+  function loadRoom(name){
+    if(roomFiles.has(name))return roomFiles.get(name);
+    const door=doors[name],tag=document.createElement('script');
+    const pending=new Promise((resolve,reject)=>{
+      let done=false;
+      const fail=err=>{if(done)return;done=true;clearTimeout(timeout);tag.remove();roomFiles.delete(name);reject(err)};
+      const timeout=setTimeout(()=>fail(new Error('Room request timed out')),15000);
+      tag.onerror=()=>fail(new Error('Room request failed'));
+      tag.onload=()=>{if(done)return;try{const level=door.build();done=true;clearTimeout(timeout);resolve(level)}catch(err){fail(err)}};
+      tag.src=new URL(door.file,document.baseURI);document.head.append(tag);
+    });
+    roomFiles.set(name,pending);return pending;
   }
   function projected(p){
     const q=p.map((n,i)=>n-camera.target[i]),[r,u]=cameraAxes(),s=unit*camera.zoom;
     return [innerWidth*(.5+(q[0]*r[0]+q[2]*r[2])*s/w),innerHeight*(.5-(q[0]*u[0]+q[1]*u[1]+q[2]*u[2])*s/h)];
   }
-  function hatchPoint(){return interior?interior.exit:world.hatch.face}
-  async function shutter(open){
+  function hatchPoint(name='dome'){return interior?interior.exit:doors[name].face}
+  async function shutter(open,doorName){
     if(motionQuery.matches||!canvas.animate)return;
-    const [x,y]=projected(hatchPoint()),cx=clamp(x/innerWidth*100,4,96),cy=clamp(y/innerHeight*100,4,96);
+    const [x,y]=projected(hatchPoint(doorName)),cx=clamp(x/innerWidth*100,4,96),cy=clamp(y/innerHeight*100,4,96);
     const clip=r=>'circle('+r+' at '+cx+'% '+cy+'%)';
     const stages=[{clipPath:clip('152vmax'),filter:'brightness(1)'},{clipPath:clip('0vmax'),filter:'brightness(1.28)'}];
     const animation=canvas.animate(open?stages.reverse():stages,{duration:open?550:370,easing:open?'cubic-bezier(.13,.61,.34,1)':'cubic-bezier(.52,0,.82,.48)',fill:'forwards'});
     iris=animation;try{await animation.finished}catch{}
   }
-  function syncHash(inside,replace=false){
-    const url=new URL(location.href);url.hash=inside?'dome':'';
+  function syncHash(name,replace=false){
+    const url=new URL(location.href);url.hash=name;
     if(url.href!==location.href)try{history[replace?'replaceState':'pushState'](null,'',url)}catch{location.hash=url.hash}
   }
   function roomStatus(text){
     const status=document.createElement('div');status.className='room-status';status.setAttribute('role','status');status.textContent=text;
     document.body.append(status);setTimeout(()=>status.remove(),5000);
   }
-  async function changeRoom(inside,writeHash=true){
-    if(wantInside===inside&&(switching||Boolean(interior)===inside))return;
-    const id=++revision,before={level:interior,walker,view:copyView(camera)};wantInside=inside;iris?.cancel();iris=null;
+  function returnToStreet(door){
+    walker=outdoorWalker;const p=walker.state;
+    p.x=door.x;p.z=door.threshold+.21;p.floor=p.y=walker.ground(p.x,p.z);
+    p.yaw=0;walker.stop();p.ripples.fill(0);
+  }
+  async function changeRoom(name,writeHash=true){
+    if(wantedRoom===name&&(switching||activeRoom===name))return;
+    const id=++revision,before={name:activeRoom,level:interior,walker,view:copyView(camera)};
+    const doorName=name||activeRoom||'dome';wantedRoom=name;iris?.cancel();iris=null;
     releaseMovement();switching=true;
     try{
-      if(Boolean(interior)!==inside){
-        const [level]=await Promise.all([inside?loadRoom():null,shutter(false)]);
+      if(activeRoom!==name){
+        const [level]=await Promise.all([name?loadRoom(name):null,shutter(false,doorName)]);
         if(id!==revision)return;
-        if(inside){
-          savedView=copyView(camera);interior=level;walker=createRoostWalker(level.walkway);walker.state.yaw=Math.PI;
+        if(name){
+          if(!activeRoom)savedView=copyView(camera);
+          else savedView=copyView(name==='backrooms'?alleyView:home);
+          interior=level;walker=createRoostWalker(level.walkway);walker.state.yaw=Math.PI;
           Object.assign(camera,copyView(level.home));
         }else{
-          interior=null;walker=outdoorWalker;const p=walker.state,d=world.hatch;
-          p.x=d.x;p.z=d.threshold+.21;p.floor=p.y=walker.ground(p.x,p.z);p.yaw=0;walker.stop();p.ripples.fill(0);
-          Object.assign(camera,copyView(savedView||home));
+          interior=null;returnToStreet(doors[doorName]);Object.assign(camera,copyView(savedView||home));
         }
         Object.assign(goal,copyView(camera));unit=fitScale();poseActor(age);renderer.draw(age);
-        if(writeHash)syncHash(inside);
-        canvas.dataset.scene=inside?'dome':'islands';canvas.setAttribute('aria-label',inside?insideLabel:outsideLabel);iris?.cancel();iris=null;
-        await shutter(true);
-      }else if(writeHash)syncHash(inside);
+        activeRoom=name;if(writeHash)syncHash(name);
+        canvas.dataset.scene=name||'islands';canvas.setAttribute('aria-label',name?doors[name].label+roomControls:outsideLabel);
+        iris?.cancel();iris=null;await shutter(true,doorName);
+      }else if(writeHash)syncHash(name);
     }catch(err){
       if(id!==revision)return;
-      interior=before.level;walker=before.walker;
+      interior=before.level;walker=before.walker;activeRoom=before.name;
       Object.assign(camera,copyView(before.view));Object.assign(goal,copyView(before.view));unit=fitScale();
-      if(!interior&&Math.abs(walker.state.x-world.hatch.x)<.37&&walker.state.z<=world.hatch.threshold){
-        const p=walker.state;p.z=world.hatch.threshold+.18;p.floor=p.y=walker.ground(p.x,p.z);
-      }
-      wantInside=!!interior;syncHash(wantInside,true);
-      roomStatus('The dome could not open. Try its hatch again.');
-      console.warn(err);
+      const door=doors[doorName];
+      if(!interior&&Math.abs(walker.state.x-door.x)<door.halfWidth&&walker.state.z<=door.threshold)returnToStreet(door);
+      wantedRoom=activeRoom;syncHash(activeRoom,true);
+      roomStatus('The room could not open. Try the door again.');console.warn(err);
     }finally{if(id===revision){iris?.cancel();iris=null;switching=false;dirty=true}}
   }
-  function followLocation(){changeRoom(location.hash==='#dome',false);}
+  function followLocation(){
+    const hash=location.hash.slice(1);
+    const showDoor=hash==='alley-door';
+    if(!interior&&(showDoor||hash==='backrooms')){
+      Object.assign(camera,copyView(alleyView));Object.assign(goal,copyView(camera));dirty=true;
+    }
+    changeRoom(Object.hasOwn(doors,hash)?hash:'',false).then(()=>{
+      if(showDoor&&!interior&&location.hash==='#alley-door'){Object.assign(camera,copyView(alleyView));Object.assign(goal,copyView(camera));dirty=true;}
+    });
+  }
   addEventListener('popstate',followLocation);addEventListener('hashchange',followLocation);
-  function atHatch(x,y){
-    const [px,py]=projected(hatchPoint()),s=unit*camera.zoom*innerWidth/w;
-    const minimum=matchMedia('(pointer: coarse)').matches?17:9;
-    return ((x-px)/Math.max(minimum,.47*s))**2+((y-py)/Math.max(minimum+1,.63*s))**2<1;
+  function doorHit(x,y){
+    const scale=unit*camera.zoom*innerWidth/w,minimum=matchMedia('(pointer: coarse)').matches?17:9;
+    let best=null,nearest=1;
+    for(const name of interior?[activeRoom]:Object.keys(doors)){
+      if(!name)continue;
+      const [px,py]=projected(hatchPoint(name));
+      const score=((x-px)/Math.max(minimum,.54*scale))**2+((y-py)/Math.max(minimum+1,.76*scale))**2;
+      if(score<nearest){nearest=score;best=interior?'':name}
+    }
+    return best;
   }
   function focusPoint(clientX,clientY){
-    if(atHatch(clientX,clientY)){changeRoom(!interior);return}
+    const hit=doorHit(clientX,clientY);if(hit!==null){changeRoom(hit);return}
     const [r,u,e]=cameraAxes(),s=unit*camera.zoom,px=(clientX/innerWidth-.5)*w,py=(.5-clientY/innerHeight)*h;
     let nearest=-Infinity,pt=null,limit=(Math.max(4,w/135))**2;
     const points=interior?interior.mesh.vertices:data,stride=interior?6:16;
@@ -4377,7 +4448,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   addEventListener('keyup',e=>movementKeys.delete(e.code));
   addEventListener('keydown',e=>{
     if(e.altKey||e.metaKey||e.ctrlKey)return;
-    if(e.key==='Escape'&&(interior||switching)){e.preventDefault();changeRoom(false);return}
+    if(e.key==='Escape'&&(interior||switching)){e.preventDefault();changeRoom('');return}
     if(switching)return;
     if(walkCodes.has(e.code)){
       movementKeys.add(e.code);
@@ -4399,11 +4470,20 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     if(movementKeys.size||walker.state.speed||walker.state.turn||walker.state.stride||ripples[2]||ripples[5]||ripples[8]||Math.abs(walker.state.y-walker.state.floor)>.001){
       const p=walker.state,oldZ=p.z;walker.update(dt,movementKeys);dirty=true;
       if(interior){
-        if(Math.abs(p.x)<.62&&oldZ<3.88&&p.z>=3.88){changeRoom(false);return}
-      }else if(Math.abs(p.x-world.hatch.x)<.37&&oldZ>world.hatch.threshold&&p.z<=world.hatch.threshold){changeRoom(true);return}
+        const gate=interior.exitGate||{x:0,z:3.88,halfWidth:.62};
+        if(Math.abs(p.x-gate.x)<gate.halfWidth&&oldZ<gate.z&&p.z>=gate.z){changeRoom('');return}
+      }else for(const name of Object.keys(doors)){
+        const d=doors[name];
+        if(Math.abs(p.x-d.x)<d.halfWidth&&oldZ>d.threshold&&p.z<=d.threshold){changeRoom(name);return}
+      }
     }
     if(!motionQuery.matches)age+=dt;
     if(dirty||dif>.00005||!motionQuery.matches){unit=fitScale();poseActor(age);renderer.draw(age);dirty=false}
+  }
+  if(location.hash==='#alley-door'){
+    const d=doors.backrooms,p=outdoorWalker.state;
+    p.x=d.x-.79;p.z=d.threshold+1.10;p.floor=p.y=outdoorWalker.ground(p.x,p.z);
+    p.yaw=Math.atan2(d.x-p.x,d.threshold-p.z);
   }
   addEventListener('resize',resize);resize();canvas.dataset.scene='islands';followLocation();requestAnimationFrame(update);
 })();
