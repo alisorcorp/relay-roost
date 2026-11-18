@@ -1352,7 +1352,7 @@ function makePaintedGeometry(){
     }
     grid(nx,ny,(u,v)=>point(direction(u,v)),null,first,count,tw,th,nearest,kind);
   }
-  function finish(world){
+  function finish(world,pigments){
     batch();
     // A one-texel gutter around every patch keeps linear filtering local,
     // including the smallest bolts and narrowest neon tubes.
@@ -1369,7 +1369,7 @@ function makePaintedGeometry(){
     for(let i=0;i<ranges.length;i+=2)covered.fill(1,ranges[i],ranges[i+1]);
     for(const p of patches){
       for(let j=0;j<p.h;j++)for(let i=0;i<p.w;i++){
-        const at=p.donor(i,j),rgb=world.data[at*16+7],mode=world.mode[at]&15,k=4*((j+p.y)*width+i+p.x);
+        const at=p.donor(i,j),rgb=pigments?pigments[at]:world.data[at*16+7],mode=pigments?0:world.mode[at]&15,k=4*((j+p.y)*width+i+p.x);
         atlas[k]=rgb&255;atlas[k+1]=(rgb>>8)&255;atlas[k+2]=rgb>>16;
         atlas[k+3]=mode===9?255:mode===1?128:0;
       }
@@ -1395,7 +1395,7 @@ function makePaintedGeometry(){
 function makePaintedPass(gl,program,mesh,waterShader){
   const vs=`precision highp float;
     attribute vec3 position;attribute vec2 sampleUV;attribute float group;
-    uniform vec3 right,up,eye,focus,dishRoot,birdRoot;uniform vec2 screen;uniform float zoom,clock;
+    uniform vec3 right,up,eye,focus,dishRoot,birdRoot,sweepPivot;uniform vec2 screen;uniform float zoom,clock;
     varying vec2 uv;varying vec3 worldPoint;varying float shade;
     void main(){
       vec3 p=position;float motion=floor(group);shade=1.-fract(group);
@@ -1405,6 +1405,7 @@ function makePaintedPass(gl,program,mesh,waterShader){
         vec3 d=p-root;p=root+vec3(cos(a)*d.x+sin(a)*d.z,d.y,-sin(a)*d.x+cos(a)*d.z);
         if(motion==3.)p.y+=.018*sin(clock*2.);
       }
+      ${mesh.scanner?`if(motion==13.){float a=clock*.58;vec2 d=p.xy-sweepPivot.xy;p.xy=sweepPivot.xy+mat2(cos(a),-sin(a),sin(a),cos(a))*d;}`:''}
       if(motion==5.){p.x+=.022*sin(p.z*1.9+clock*1.13);p.z+=.013*sin(p.x+clock*.92);}
       vec3 d=p-focus;gl_Position=vec4(vec2(dot(d,right),dot(d,up))*zoom*2./screen,-dot(d,eye)/24.,1.);
       uv=sampleUV;worldPoint=p;
@@ -1441,12 +1442,13 @@ function makePaintedPass(gl,program,mesh,waterShader){
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,mesh.width,mesh.height,0,gl.RGBA,gl.UNSIGNED_BYTE,mesh.atlas);
   const attrs=[['position',3,0],['sampleUV',2,12],['group',1,20]].map(([name,size,offset])=>[gl.getAttribLocation(pg,name),size,offset]);
   const uniforms={};
-  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
+  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','sweepPivot','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
   return function(axes,focus,scale,w,h,clock,world,walker,rain){
     const u=uniforms;
     gl.useProgram(pg);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(u.palette,3);
     gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform4f(u.rainMap,rain.left,rain.back,rain.resolution/rain.cols,rain.resolution/rain.rows);
     gl.uniform3fv(u.right,axes[0]);gl.uniform3fv(u.up,axes[1]);gl.uniform3fv(u.eye,axes[2]);gl.uniform3fv(u.focus,focus);
+    if(mesh.scanner)gl.uniform3fv(u.sweepPivot,mesh.scanner);
     gl.uniform3fv(u.dishRoot,mesh.turntable||world.dishPivot);gl.uniform3fv(u.birdRoot,world.birdPivot);gl.uniform3f(u.walkerFoot,walker.x,walker.y,walker.z);
     gl.uniform3fv(u['ripples[0]'],walker.ripples);gl.uniform2f(u.screen,w,h);gl.uniform1f(u.clock,clock);gl.uniform1f(u.zoom,scale);
     gl.bindBuffer(gl.ARRAY_BUFFER,verts);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,elements);
@@ -1469,12 +1471,16 @@ function makeSoftwarePainted(mesh,world){
     const [right,up,eye]=axes;
     const dish=mesh.turntable?time*.17:.078*Math.sin(time*.32),scan=Math.sin(time*.93+.55),bird=.50*scan/(Math.abs(scan)+.16)+.09*Math.sin(time*2);
     const cosD=Math.cos(dish),sinD=Math.sin(dish),cosB=Math.cos(bird),sinB=Math.sin(bird),bob=.018*Math.sin(time*2);
+    const sweepCos=Math.cos(time*.58),sweepSin=Math.sin(time*.58);
     for(let i=0,j=0;i<verts.length;i+=6,j+=4){
       let x=verts[i],y=verts[i+1],z=verts[i+2];const group=Math.floor(verts[i+5]);
       if(group===2||group===3){
         const root=group===2?(mesh.turntable||world.dishPivot):world.birdPivot,c=group===2?cosD:cosB,s=group===2?sinD:sinB;
         const dx=x-root[0],dz=z-root[2];
         x=root[0]+c*dx+s*dz;z=root[2]+c*dz-s*dx;if(group===3)y+=bob;
+      }else if(group===13&&mesh.scanner){
+        const [cx,cy]=mesh.scanner,dx=x-cx,dy=y-cy;
+        x=cx+sweepCos*dx+sweepSin*dy;y=cy-sweepSin*dx+sweepCos*dy;
       }else if(group===5){x+=.022*Math.sin(z*1.9+time*1.13);z+=.013*Math.sin(x+time*.92)}
       const dx=x-walker.x-.10,dz=z-walker.z+.075,level=Math.abs(y-walker.y);
       const contact=level>.32||Math.abs(dx)>.84||Math.abs(dz)>.67?0:Math.exp(-13.69*dx*dx-21.16*dz*dz)*Math.min(1,(.32-level)/.26);
@@ -3906,7 +3912,17 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     return (reach+.10)*2.10;
   });
   function fitScale(){
-    if(interior)return Math.min(w/16.95,h/10.05);
+    if(interior){
+      if(!interior.frame)return Math.min(w/16.95,h/10.05);
+      const [right,up]=cameraAxes(),center=interior.home.target;
+      let halfWidth=0,halfHeight=0;
+      for(const [x,y,z] of interior.frame){
+        const dx=x-center[0],dy=y-center[1],dz=z-center[2];
+        halfWidth=Math.max(halfWidth,Math.abs(dx*right[0]+dz*right[2]));
+        halfHeight=Math.max(halfHeight,Math.abs(dx*up[0]+dy*up[1]+dz*up[2]));
+      }
+      return Math.min(w/(2*halfWidth+1.30),h/(2*halfHeight+1.05));
+    }
     const i=clamp((camera.pitch-.065)/(1.34-.065)*32,0,32),k=Math.floor(i);
     return Math.min(w/23.9,h/mix(framing[k],framing[Math.min(32,k+1)],i-k));
   }
@@ -4179,7 +4195,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   function reset(){const view=interior?interior.home:home;Object.assign(goal,view,{target:[...view.target]});velocity=0;dirty=true}
   const down=new Map(),dragSurface=document.body;
   let lastMove=0,pair=null,moved=false,lastTap=null;
-  const targetLimit=(v,i)=>interior?clamp(v,[-7,-.8,-3.9][i],[7,4.3,4.5][i]):clamp(v,[-5.3,-.8,-5.3][i],[17.4,7.5,5.3][i]);
+  const targetLimit=(v,i)=>interior?clamp(v,[-7,-.8,-8.35][i],[7,4.3,4.5][i]):clamp(v,[-5.3,-.8,-5.3][i],[17.4,7.5,5.3][i]);
   function beginPair(){
     const [a,b]=down.values(),bounds=canvas.getBoundingClientRect();
     const [right,up]=cameraAxes();
@@ -4239,7 +4255,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   let loadedRoom=null,roomFile=null,savedView=null,switching=false,wantInside=false,revision=0,iris=null;
   const copyView=view=>({...view,target:[...view.target]});
   const outsideLabel=canvas.getAttribute('aria-label');
-  const insideLabel='A cutaway view inside the relay dome. Explore the chart room, radio workshop and keeper’s quarters. W and S move, A and D turn, and Shift with W runs. Drag to orbit, middle-drag to pan, or use two fingers to pan and pinch. Walk through the illuminated front sill, double-tap it, or press Escape to return outside.';
+  const insideLabel='A cutaway view inside the relay dome. Explore the chart room, long receiver gallery, round tuning bay and keeper’s quarters. W and S move, A and D turn, and Shift with W runs. Drag to orbit, middle-drag to pan, or use two fingers to pan and pinch. Walk through the illuminated front sill, double-tap it, or press Escape to return outside.';
   function loadRoom(){
     if(loadedRoom)return Promise.resolve(loadedRoom);
     if(!roomFile){
