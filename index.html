@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk into the dome hatch or the red door beneath the alley lanterns. Double-click or double-tap either door to enter. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. A small robot sits beneath the tree to the left of the satellite dish. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk into the dome hatch or the red door beneath the alley lanterns. Double-click or double-tap either door to enter. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
 MIT License
 
 Copyright (c) 2026 siliconjungle
@@ -1395,7 +1395,7 @@ function makePaintedGeometry(){
 function makePaintedPass(gl,program,mesh,waterShader){
   const vs=`precision highp float;
     attribute vec3 position;attribute vec2 sampleUV;attribute float group;
-    uniform vec3 right,up,eye,focus,dishRoot,birdRoot,sweepPivot;uniform vec2 screen;uniform float zoom,clock;
+    uniform vec3 right,up,eye,focus,dishRoot,birdRoot,sweepPivot,robotTurn;uniform vec2 screen;uniform float zoom,clock;
     varying vec2 uv;varying vec3 worldPoint;varying float shade;
     void main(){
       vec3 p=position;float motion=floor(group);shade=1.-fract(group);
@@ -1405,6 +1405,7 @@ function makePaintedPass(gl,program,mesh,waterShader){
         vec3 d=p-root;p=root+vec3(cos(a)*d.x+sin(a)*d.z,d.y,-sin(a)*d.x+cos(a)*d.z);
         if(motion==3.)p.y+=.018*sin(clock*2.);
       }
+      ${mesh.robotPivot?`if(motion==4.){float c=cos(robotTurn.z),s=sin(robotTurn.z);vec2 d=p.xz-robotTurn.xy;p.xz=robotTurn.xy+vec2(c*d.x+s*d.y,c*d.y-s*d.x);}`:''}
       ${mesh.scanner?`if(motion==13.){float a=clock*.58;vec2 d=p.xy-sweepPivot.xy;p.xy=sweepPivot.xy+mat2(cos(a),-sin(a),sin(a),cos(a))*d;}`:''}
       if(motion==5.){p.x+=.022*sin(p.z*1.9+clock*1.13);p.z+=.013*sin(p.x+clock*.92);}
       vec3 d=p-focus;gl_Position=vec4(vec2(dot(d,right),dot(d,up))*zoom*2./screen,-dot(d,eye)/24.,1.);
@@ -1442,12 +1443,13 @@ function makePaintedPass(gl,program,mesh,waterShader){
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,mesh.width,mesh.height,0,gl.RGBA,gl.UNSIGNED_BYTE,mesh.atlas);
   const attrs=[['position',3,0],['sampleUV',2,12],['group',1,20]].map(([name,size,offset])=>[gl.getAttribLocation(pg,name),size,offset]);
   const uniforms={};
-  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','sweepPivot','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
+  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','sweepPivot','robotTurn','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
   return function(axes,focus,scale,w,h,clock,world,walker,rain){
     const u=uniforms;
     gl.useProgram(pg);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(u.palette,3);
     gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform4f(u.rainMap,rain.left,rain.back,rain.resolution/rain.cols,rain.resolution/rain.rows);
     gl.uniform3fv(u.right,axes[0]);gl.uniform3fv(u.up,axes[1]);gl.uniform3fv(u.eye,axes[2]);gl.uniform3fv(u.focus,focus);
+    if(mesh.robotPivot)gl.uniform3f(u.robotTurn,mesh.robotPivot[0],mesh.robotPivot[2],yardRobotGlance(clock));
     if(mesh.scanner)gl.uniform3fv(u.sweepPivot,mesh.scanner);
     gl.uniform3fv(u.dishRoot,mesh.turntable||world.dishPivot);gl.uniform3fv(u.birdRoot,world.birdPivot);gl.uniform3f(u.walkerFoot,walker.x,walker.y,walker.z);
     gl.uniform3fv(u['ripples[0]'],walker.ripples);gl.uniform2f(u.screen,w,h);gl.uniform1f(u.clock,clock);gl.uniform1f(u.zoom,scale);
@@ -1471,6 +1473,7 @@ function makeSoftwarePainted(mesh,world){
     const [right,up,eye]=axes;
     const dish=mesh.turntable?time*.17:.078*Math.sin(time*.32),scan=Math.sin(time*.93+.55),bird=.50*scan/(Math.abs(scan)+.16)+.09*Math.sin(time*2);
     const cosD=Math.cos(dish),sinD=Math.sin(dish),cosB=Math.cos(bird),sinB=Math.sin(bird),bob=.018*Math.sin(time*2);
+    const glance=mesh.robotPivot?yardRobotGlance(time):0,robotCos=Math.cos(glance),robotSin=Math.sin(glance);
     const sweepCos=Math.cos(time*.58),sweepSin=Math.sin(time*.58);
     for(let i=0,j=0;i<verts.length;i+=6,j+=4){
       let x=verts[i],y=verts[i+1],z=verts[i+2];const group=Math.floor(verts[i+5]);
@@ -1478,6 +1481,9 @@ function makeSoftwarePainted(mesh,world){
         const root=group===2?(mesh.turntable||world.dishPivot):world.birdPivot,c=group===2?cosD:cosB,s=group===2?sinD:sinB;
         const dx=x-root[0],dz=z-root[2];
         x=root[0]+c*dx+s*dz;z=root[2]+c*dz-s*dx;if(group===3)y+=bob;
+      }else if(group===4&&mesh.robotPivot){
+        const [cx,,cz]=mesh.robotPivot,dx=x-cx,dz=z-cz;
+        x=cx+robotCos*dx+robotSin*dz;z=cz+robotCos*dz-robotSin*dx;
       }else if(group===13&&mesh.scanner){
         const [cx,cy]=mesh.scanner,dx=x-cx,dy=y-cy;
         x=cx+sweepCos*dx+sweepSin*dy;y=cy-sweepSin*dx+sweepCos*dy;
@@ -2344,6 +2350,116 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
 }
 if(typeof module!=='undefined'&&module.exports)module.exports=buildNeonAlley;
 
+// A little retired yard machine. Local +Z points out from the tree into the clearing.
+function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
+  const x=tree[0]+.14,z=tree[2]+.47,y=land(x,z);
+  const angle=.13,cs=Math.cos(angle),sn=Math.sin(angle);
+  const p=([u,h,v])=>[x+u*cs+v*sn,y+h,z-u*sn+v*cs];
+  const iron=[52,65,74],joint=[36,42,48],steel=[161,174,172],edge=[206,213,192];
+  const blue=[128,160,174],pale=[174,197,197],oxide=[160,70,49],brass=[190,145,88];
+  const glass=[31,41,50],phosphor=[255,75,40];
+  const plate=(a,b,c,d,color,lit=false)=>quad(p(a),p(b),p(c),p(d),color,.042,.055,lit);
+  const rod=(a,b,r,color,lit=false)=>line(p(a),p(b),r,color,lit);
+  const piston=(a,b,r1,r2,color)=>pipe(p(a),p(b),r1,r2,color,.044,10);
+  const bearing=(a,r,color)=>ellipsoid(p(a),[r,r,r],color,.043);
+  // Eight-sided stampings have short chamfers at the corners and a rolled top lip.
+  function stamping(u,v,sections,colors){
+    const rings=sections.map(([h,hw,hd,cut])=>[
+      [u-hw+cut,h,v+hd],[u+hw-cut,h,v+hd],[u+hw,h,v+hd-cut],[u+hw,h,v-hd+cut],
+      [u+hw-cut,h,v-hd],[u-hw+cut,h,v-hd],[u-hw,h,v-hd+cut],[u-hw,h,v+hd-cut]
+    ]);
+    for(let j=1;j<rings.length;j++)for(let i=0;i<8;i++){
+      const n=(i+1)%8;plate(rings[j-1][i],rings[j-1][n],rings[j][n],rings[j][i],colors[j-1]);
+    }
+    for(const ring of [rings[0],rings.at(-1)]){
+      const top=ring===rings.at(-1),order=top?ring:[...ring].reverse();
+      for(let i=1;i<7;i+=2)plate(order[0],order[i],order[i+1],order[i+2],top?colors.at(-1):colors[0]);
+    }
+  }
+  const ground=(u,v)=>{const [gx,,gz]=p([u,0,v]);return land(gx,gz)-y;};
+  // A low spent battery takes his weight. Its grooved case is visible from the back.
+  stamping(0,-.035,[[-.08,.21,.145,.04],[.19,.22,.15,.04],[.215,.205,.14,.035]],[iron,brass]);
+  for(const side of [-1,1]){
+    rod([side*.13,.07,-.19],[side*.13,.18,-.19],.013,steel);
+  }
+  stamping(0,-.002,[[.21,.14,.115,.05],[.26,.19,.14,.045],[.36,.15,.13,.045]],[iron,joint]);
+  stamping(0,-.006,[[.33,.14,.115,.045],[.51,.231,.156,.057],[.58,.202,.145,.046]],[blue,pale]);
+  for(let j=0;j<3;j++)rod([-.095,.37+.033*j,.145],[.10,.37+.033*j,.145],.010,joint);
+  for(const s of [-1,1]){
+    // One foot is pulled in. The other heel has slid downhill.
+    const toe=s<0?.43:.56,footX=s*(s<0?.24:.27),sole=ground(footX,toe);
+    const knee=[s*.203,s<0?.384:.303,toe-.14],heel=[footX,sole+.093,toe-.068];
+    piston([s*.103,.258,.04],knee,.076,.083,iron);
+    piston(knee,heel,.058,.039,steel);
+    piston([knee[0],knee[1]-.034,knee[2]+.004],[heel[0],heel[1]+.059,heel[2]],.075,.061,blue);
+    piston([knee[0]-s*.054,knee[1],knee[2]],[knee[0]+s*.063,knee[1],knee[2]],.084,.077,joint);
+    piston([knee[0]+s*.06,knee[1],knee[2]],[knee[0]+s*.076,knee[1],knee[2]],.05,.048,brass);
+    const shinAt=t=>knee.map((v,i)=>v+(heel[i]-v)*t);
+    const springStart=shinAt(.26),springEnd=shinAt(.83);
+    for(const q of [springStart,springEnd]){q[0]+=s*.070;q[2]-=.017;}
+    piston(springStart,springEnd,.014,.012,brass);
+    piston(shinAt(.67),shinAt(.74),.066,.065,s<0?oxide:iron);
+    piston(heel,[footX,sole+.043,toe+.018],.044,.058,joint);
+    stamping(footX,toe,[[sole-.016,.092,.139,.031],[sole+.029,.104,.147,.039],[sole+.086,.092,.127,.036],[sole+.104,.067,.07,.027]],[joint,blue,pale]);
+    for(const off of [-.033,.033])rod([footX+off,sole+.082,toe+.102],[footX+off,sole+.073,toe+.131],.006,iron);
+    // Elbows point out; the forearms fall forward to rest across the knees.
+    const shoulder=[s*.22,.515,.012],elbow=[s*.313,s<0?.445:.395,.126],wrist=[s*.215,knee[1]+.075,knee[2]+.035];
+    bearing(shoulder,.072,joint);
+    piston(shoulder,elbow,.052,.05,steel);
+    stamping(s*.234,.022,[[.475,.076,.091,.030],[.549,.086,.097,.030],[.59,.058,.073,.025]],[s<0?oxide:blue,pale]);
+    bearing(elbow,.057,joint);
+    piston(elbow,wrist,.074,.051,s<0?blue:pale);
+    const palm=[wrist[0]-.023*s,wrist[1]-.041,wrist[2]+.037];
+    piston(wrist,palm,.040,.044,iron);
+    for(const f of [-1,1]){
+      const a=[palm[0]+f*.024,palm[1],palm[2]],b=[a[0],a[1]-.037,a[2]+.024];
+      rod(a,b,.014,steel);rod(b,[b[0]-s*.007,b[1]-.025,b[2]-.006],.010,iron);
+    }
+  }
+  piston([0,.55,-.03],[0,.664,.018],.079,.083,joint);
+  const pivot=p([0,.623,.015]);
+  setGroup(4);
+  // Split brow, recessed optical slit and a perforated jaw. Both lenses sit behind the armor lip.
+  stamping(0,.018,[[.592,.149,.105,.045],[.643,.206,.144,.050],[.714,.241,.157,.047],
+    [.852,.257,.157,.057],[.928,.213,.125,.051],[.951,.139,.086,.04]],[iron,blue,iron,blue,pale]);
+  for(const s of [-1,1]){
+    const face=(u,h,v)=>[s*u,h,v];
+    const band=(inner,outer,il,ol,ih,oh,v,col,lit=false)=>{
+      const points=[face(inner,il,v),face(outer,ol,v),face(outer,oh,v),face(inner,ih,v)];
+      if(s<0)points.reverse();plate(...points,col,lit);
+    };
+    band(.008,.198,.709,.739,.804,.848,.178,glass);
+    band(.026,.176,.742,.773,.764,.809,.182,phosphor,true);
+    band(.035,.064,.745,.751,.762,.771,.185,[255,202,128],true);
+    // The back edge of the brow is higher, giving it a visible facet from above.
+    const brow=[face(.002,.775,.201),face(.205,.829,.190),face(.204,.867,.157),face(.010,.838,.167)];
+    if(s<0)brow.reverse();plate(...brow,pale);
+    rod(face(.010,.775,.201),face(.199,.827,.191),.009,iron);
+    piston(face(.227,.748,-.006),face(.265,.748,-.006),.076,.066,iron);
+    piston(face(.264,.748,-.006),face(.277,.748,-.006),.047,.040,steel);
+    rod(face(.11,.672,.163),face(.19,.704,.170),.014,pale);
+  }
+  for(let i=-2;i<=2;i++)rod([i*.025,.643+Math.abs(i)*.005,.166],[i*.027,.689,.178],.006,joint);
+  // Faded repair stripe, scraped corners, and a bent feeler with a crimped brass tip.
+  plate([-.140,.861,.177],[-.113,.861,.177],[-.111,.929,.145],[-.137,.929,.145],oxide);
+  plate([-.137,.929,.145],[-.111,.929,.145],[-.107,.951,.104],[-.133,.951,.104],oxide);
+  rod([.11,.903,.158],[.144,.916,.151],.005,edge);
+  rod([-.165,.827,-.105],[-.235,1.006,-.100],.018,iron);
+  rod([-.235,1.006,-.100],[-.283,1.063,-.087],.011,steel);
+  bearing([-.283,1.063,-.087],.022,brass);
+  for(let j=0;j<4;j++)rod([-.101,.759+j*.029,-.143],[.102,.759+j*.029,-.143],.008,joint);
+  setGroup(0);
+  const left=p([-.195,0,.31]),right=p([.20,0,.42]);
+  barrier(x,z,.242);barrier(left[0],left[2],.114,right[0],right[2]);
+  return {pivot,focus:p([0,.54,.14])};
+}
+
+// A short, deliberate look to the side, then a long hold.
+function yardRobotGlance(time){
+  const t=time%9, ease=v=>{const u=Math.max(0,Math.min(1,v));return u*u*(3-2*u);};
+  return -.28*(ease((t-1.8)/.56)-ease((t-4.6)/.93));
+}
+
 // Relay Roost. Original Ink Studio scene. Lengths are in miniature world units.
 function orbitalRoost({makeBuilder}) {
   return {id:'relay-roost',name:'Relay Roost',seed:4711,build(seed=4711){
@@ -2362,7 +2478,7 @@ function orbitalRoost({makeBuilder}) {
     };
     const light=unit([-.52,.84,.51]),sky=unit([.45,.45,-.67]);
     const painted=makePaintedGeometry(),citrusMesh=[],mode=[],haloes=[],motes=[];let group=0;
-    // 0 static, 1 water, 2 scanning antenna, 3 bird's head, 5 foliage, 6 running water.
+    // 0 static, 1 water, 2 scanning antenna, 3 bird's head, 4 yard robot's head, 5 foliage, 6 running water.
     // The daylight pigments carry across the mossy end of the bridge.
     const wetlandAt=x=>1-smooth(5.65,8.18,x);
     function paint(p,n,base,grain=.055,emission=0) {
@@ -3013,7 +3129,8 @@ function orbitalRoost({makeBuilder}) {
       }
     }
     grove([3.70,land(3.70,-2.61),-2.61],1.13,-.29);
-    grove([-4.13,land(-4.13,-1.62),-1.62],.63,2.78);
+    const leftTree=[-4.13,land(-4.13,-1.62),-1.62];
+    grove(leftTree,.63,2.78);
 
     // Enamel kingfisher on a survey marker, its feet gripping the horizontal rail.
     const post=[3.54,0,1.87],px=post[0],pz=post[2];
@@ -3125,7 +3242,9 @@ function orbitalRoost({makeBuilder}) {
     }
     const makeAlley=typeof buildNeonAlley==='function'?buildNeonAlley:require('./alley');
     const alley=makeAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,motes,n3,pointCount:()=>mode.length,rr,dab,fern,ellipsoid,pen});
+    const yardRobot=buildYardRobot({tree:leftTree,land,quad,line,pipe,ellipsoid,barrier,setGroup:value=>{group=value}});
     const world=B.finish({cam:{target:[5.94,1.88,0],pitch:.46,yaw:-.28,dist:30},detail:18,radius:12,dither:.25});
+    world.yardRobot=yardRobot;
     world.citrusMesh=Float32Array.from(citrusMesh);world.mode=Uint8Array.from(mode);world.dishPivot=center;world.birdPivot=birdJoint;world.haloes=haloes;world.motes=motes;world.steam=alley.steam;
     // Bake soft sun occlusion into the pigments, including the water under the bridge.
     const sideSun=unit(cross(Y,light)),upSun=cross(light,sideSun),N=780,pxScale=19;
@@ -3156,6 +3275,7 @@ function orbitalRoost({makeBuilder}) {
     }
     alley.lightSurfaces(world);
     world.painted=painted.finish(world);
+    world.painted.robotPivot=yardRobot.pivot;
     world.alleyWeather=alley.weather;
     world.alleyTint=alley.actorLight;
     world.alleyDoor=alley.door;
@@ -3980,7 +4100,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   const vertex=`
     precision highp float;
     attribute vec3 pos, pigment, cov0, cov1;attribute float kind;
-    uniform vec3 right,up,eye,focus,birdRoot,dishRoot,feet,ripples[3];uniform vec2 screen;uniform float zoom,clock,reflectPass;
+    uniform vec3 right,up,eye,focus,birdRoot,dishRoot,feet,ripples[3];uniform vec3 robotTurn;uniform vec2 screen;uniform float zoom,clock,reflectPass;
     varying vec3 ink,conic,worldPoint;varying float size,water;
     mat3 rotateY(float t){float c=cos(t),s=sin(t);return mat3(c,0.,-s,0.,1.,0.,s,0.,c);}
     void main(){
@@ -3988,6 +4108,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
       if(mode==2.){rot=rotateY(.078*sin(clock*.32));p=dishRoot+rot*(p-dishRoot);}
       if(mode==3.){float scan=sin(clock*.93+.55);float t=.50*scan/(abs(scan)+.16)+.09*sin(clock*2.0);
         rot=rotateY(t);p=birdRoot+rot*(p-birdRoot);p.y+=.018*sin(clock*2.0);}
+      if(mode==4.){rot=rotateY(robotTurn.z);vec3 root=vec3(robotTurn.x,0.,robotTurn.y);p=root+rot*(p-root);}
       if(mode==11. && reflectPass<.5){gl_Position=vec4(3.,3.,2.,1.);gl_PointSize=1.;return;}
       if(mode==5.||mode==11.){p.x+=.022*sin(p.z*1.9+clock*1.13);p.z+=.013*sin(p.x+clock*.92);}
       if(mode==6.)p.y+=.018*sin(clock*12.+p.z*21.);
@@ -4082,7 +4203,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     const drawMotes=makeMotePass(gl,program,world.motes,sketch.color);
     const drawPainted=makePaintedPass(gl,program,world.painted,waterShader);
     const drawCitrus=makeCitrusPass(gl,program,world.citrusMesh);
-    const u={};for(const key of ['right','up','eye','focus','birdRoot','dishRoot','screen','zoom','clock','reflectPass','reflection','rainField','rainMap','feet'])u[key]=gl.getUniformLocation(pg,key);
+    const u={};for(const key of ['right','up','eye','focus','birdRoot','dishRoot','robotTurn','screen','zoom','clock','reflectPass','reflection','rainField','rainMap','feet'])u[key]=gl.getUniformLocation(pg,key);
     u.ripples=gl.getUniformLocation(pg,'ripples[0]');
     const tex=gl.createTexture(),fb=gl.createFramebuffer(),depth=gl.createRenderbuffer(),blank=gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D,blank);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
@@ -4105,7 +4226,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     function bind(buffer,attributes,stride){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);for(const [a,n,o] of attributes){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,stride,o)}}
     const roomPasses=new WeakMap();
     let rw=0,rh=0,lastReflection=-2,oldPose='';
-    function uniforms(us,axes,sw,sh,scale,time){gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
+    function uniforms(us,axes,sw,sh,scale,time){if(us.robotTurn)gl.uniform3f(us.robotTurn,world.yardRobot.pivot[0],world.yardRobot.pivot[2],yardRobotGlance(time));gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
     return {resize(){
       sketch.resize(w,h);
       rw=Math.max(1,Math.round(w*.56));rh=Math.max(1,Math.round(h*.56));gl.bindTexture(gl.TEXTURE_2D,tex);
@@ -4301,6 +4422,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   });
   const TAU=Math.PI*2;
   const alleyView={target:[11.93,1.73,-.91],yaw:-.095,pitch:.16,zoom:4.6};
+  const robotView={target:world.yardRobot.focus,yaw:-.45,pitch:.21,zoom:6.8};
   const doors={
     dome:{...world.hatch,halfWidth:.37,file:'dome-interior.js',build:()=>createRelayInterior(makePaintedGeometry),label:'The relay dome, with its chart room, receiver gallery and keeper’s quarters.'},
     backrooms:{...world.alleyDoor,file:'alley-interior.js',build:()=>createAlleyInterior(makePaintedGeometry),label:'Two rooms behind the alley door. A green CRT lights the salvage shop. The passage beside the parts rack leads to a rented room.'}
@@ -4382,12 +4504,11 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   }
   function followLocation(){
     const hash=location.hash.slice(1);
-    const showDoor=hash==='alley-door';
-    if(!interior&&(showDoor||hash==='backrooms')){
-      Object.assign(camera,copyView(alleyView));Object.assign(goal,copyView(camera));dirty=true;
-    }
+    const view=hash==='robot'?robotView:hash==='alley-door'||hash==='backrooms'?alleyView:null;
+    const frameView=()=>{Object.assign(camera,copyView(view));Object.assign(goal,copyView(camera));dirty=true};
+    if(view&&!interior)frameView();
     changeRoom(Object.hasOwn(doors,hash)?hash:'',false).then(()=>{
-      if(showDoor&&!interior&&location.hash==='#alley-door'){Object.assign(camera,copyView(alleyView));Object.assign(goal,copyView(camera));dirty=true;}
+      if(view&&!interior&&location.hash.slice(1)===hash)frameView();
     });
   }
   addEventListener('popstate',followLocation);addEventListener('hashchange',followLocation);
