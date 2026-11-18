@@ -2315,15 +2315,17 @@ function orbitalRoost({makeBuilder}) {
     const mix=(a,b,t)=>a+(b-a)*t, lerp=(a,b,t)=>a.map((v,i)=>mix(v,b[i],t));
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
     const C={
-      porcelain:[238,226,193],ivory:[249,229,186],celadon:[151,187,171],alloy:[130,151,151],gun:[75,91,96],iron:[58,65,77],rubber:[44,44,49],
-      tangerine:[194,113,58],saffron:[211,156,70],rust:[155,90,55],brass:[170,136,85],amber:[255,214,143],
-      blue:[74,135,139],glass:[60,108,110],lit:[158,241,213],lamp:[247,221,151],pink:[180,107,111],
-      stone:[192,184,160],basalt:[133,139,148],soil:[160,146,103],moss:[140,149,78],grass:[169,172,81],
-      fern:[99,135,81],leaf:[132,153,70],leafLight:[195,201,107],bark:[134,105,75],water:[66,145,146]
+      porcelain:[211,213,180],ivory:[242,231,188],celadon:[153,184,163],alloy:[107,133,129],gun:[65,85,86],iron:[42,54,58],rubber:[27,36,42],
+      tangerine:[223,103,49],saffron:[246,168,79],rust:[148,74,46],brass:[173,140,88],amber:[255,197,106],
+      blue:[54,117,122],glass:[30,73,79],lit:[117,250,228],lamp:[255,222,146],pink:[236,146,163],
+      stone:[99,111,102],basalt:[63,75,75],soil:[69,68,50],moss:[123,136,65],grass:[158,166,72],
+      fern:[88,130,83],leaf:[114,149,78],leafLight:[174,188,98],bark:[104,86,63],water:[40,112,111]
     };
     const light=unit([-.52,.84,.51]),sky=unit([.45,.45,-.67]);
     const painted=makePaintedGeometry(),citrusMesh=[],mode=[],haloes=[],motes=[];let group=0;
     // 0 static, 1 water, 2 scanning antenna, 3 bird's head, 5 foliage, 6 running water.
+    // The daylight pigments carry across the mossy end of the bridge.
+    const wetlandAt=x=>1-smooth(5.65,8.18,x);
     function paint(p,n,base,grain=.055,emission=0) {
       if(emission===1)return base;
       const [r,g,b]=base,lum=.26*r+.57*g+.17*b;
@@ -2335,8 +2337,9 @@ function orbitalRoost({makeBuilder}) {
       const lightness=Math.max(0,dot(n,light));
       const sun=.63*lightness+.19*Math.max(0,n[1])+.13*Math.max(0,dot(n,sky));
       const brush=.50*stain+.50*n3(p[0]*2.5,p[1]*2.6,p[2]*2.1);
-      const dry=clamp(.05+.27*sun+.14*(brush-.45)+.10*smooth(145,221,lum),.01,.48);
-      const value=.68+.28*sun+.105*brush+.048*Math.floor(brush*3);
+      const daylight=wetlandAt(p[0]);
+      const dry=(1-.85*daylight)*clamp(.05+.27*sun+.14*(brush-.45)+.10*smooth(145,221,lum),.01,.48);
+      const value=.68+.28*sun+.105*brush+.048*Math.floor(brush*3)-daylight*(.21-.18*sun);
       const cool=(1-sun)*(.22+.11*(1-brush));
       const speck=1+grain*.40*(R()-.5);
       return base.map((v,i)=>clamp((mix(v*value,[253,243,217][i],dry)+cool*[5,6,15][i])*speck,0,255));
@@ -3099,9 +3102,18 @@ function orbitalRoost({makeBuilder}) {
       if(mode[i]&16)continue;const k=i*16,x=data[k],y=data[k+1],z=data[k+2];
       const u=Math.round(N/2+pxScale*(x*sideSun[0]+y*sideSun[1]+z*sideSun[2])),v=Math.round(N/2+pxScale*(x*upSun[0]+y*upSun[1]+z*upSun[2])),d=x*light[0]+y*light[1]+z*light[2];
       let occ=0;for(let dy=-2;dy<=2;dy+=2)for(let dx=-2;dx<=2;dx+=2){const dd=zmap[(v+dy)*N+u+dx]-d;occ+=smooth(.12,.46,dd)}
-      const q=smooth(.13,.85,occ/9),c=data[k+7]|0;
-      const rc=(c&255)*(1-.26*q)+10*q,gc=(c>>8&255)*(1-.27*q)+12*q,bc=(c>>16&255)*(1-.19*q)+21*q;
-      data[k+7]=(rc|0)+(gc|0)*256+(Math.min(255,bc)|0)*65536;
+      const q=smooth(.13,.85,occ/9),c=data[k+7]|0,daylight=wetlandAt(x);
+      const fill=q*(1-daylight);
+      const rc=(c&255)*(1-(.26+.19*daylight)*q)+10*fill;
+      const gc=(c>>8&255)*(1-(.27+.12*daylight)*q)+12*fill;
+      const bc=(c>>16&255)*(1-(.19+.08*daylight)*q)+21*fill;
+      if(daylight){
+        // Keep the colored ink in the shaded stone, pond and oxidized metal.
+        const value=.2126*rc+.7152*gc+.0722*bc;
+        const shade=11*daylight*(1-smooth(48,123,value))*smooth(0,42,value);
+        const tint=channel=>clamp(channel+.26*daylight*(channel-value)-shade,0,255)|0;
+        data[k+7]=tint(rc)+256*tint(gc)+65536*tint(bc);
+      }else data[k+7]=(rc|0)+(gc|0)*256+(Math.min(255,bc)|0)*65536;
     }
     alley.lightSurfaces(world);
     world.painted=painted.finish(world);
