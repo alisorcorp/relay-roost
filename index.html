@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll or pinch to zoom, and double-click a detail to focus. B switches between light and dark paper. Home resets the view."></canvas><script>/*
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. B switches between light and dark paper. Home resets the view."></canvas><script>/*
 MIT License
 
 Copyright (c) 2026 siliconjungle
@@ -4145,25 +4145,64 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     const ratio=Math.min(quality*(devicePixelRatio||1), (renderer.software?660:1440)/Math.max(sw,sh));
     w=canvas.width=Math.max(1,Math.round(sw*ratio));h=canvas.height=Math.max(1,Math.round(sh*ratio));
     unit=fitScale();poseActor(age);renderer.resize();renderer.draw(age);dirty=true;
+    if(down.size>=2)beginPair();
   }
   function reset(){Object.assign(goal,home,{target:[...home.target]});velocity=0;dirty=true}
-  const down=new Map();let lastMove=0,pinch=0,moved=false,lastTap=null;
-  function distance(){const [a,b]=[...down.values()];return b?Math.hypot(a.x-b.x,a.y-b.y):0}
-  const dragSurface=document.body;
+  const down=new Map(),dragSurface=document.body;
+  let lastMove=0,pair=null,moved=false,lastTap=null;
+  const targetLimit=(v,i)=>clamp(v,[-5.3,-.8,-5.3][i],[17.4,7.5,5.3][i]);
+  function beginPair(){
+    const [a,b]=down.values(),bounds=canvas.getBoundingClientRect();
+    const [right,up]=cameraAxes();
+    // Anchor the point between the fingers on the camera plane at gesture start.
+    // Using both fingers' current positions also handles interleaved pointer events.
+    pair={a,b,x:(a.x+b.x)/2,y:(a.y+b.y)/2,span:Math.hypot(b.x-a.x,b.y-a.y),
+      cx:bounds.left+bounds.width/2,cy:bounds.top+bounds.height/2,
+      unitX:w/(bounds.width*unit),unitY:h/(bounds.height*unit),
+      zoom:camera.zoom,target:[...camera.target],right,up};
+    Object.assign(goal,camera,{target:[...camera.target]});velocity=0;moved=true;lastTap=null;
+  }
+  function movePair(){
+    const {a,b,x,y,span,cx,cy,unitX,unitY,zoom,target,right,up}=pair;
+    const midX=(a.x+b.x)/2,midY=(a.y+b.y)/2,length=Math.hypot(b.x-a.x,b.y-a.y);
+    const requestedZoom=span>4?zoom*length/span:zoom;
+    goal.zoom=clamp(requestedZoom,.68,maxZoom);
+    const dx=((x-cx)/zoom-(midX-cx)/goal.zoom)*unitX;
+    const dy=((cy-y)/zoom-(cy-midY)/goal.zoom)*unitY;
+    const requestedTarget=target.map((v,i)=>v+right[i]*dx+up[i]*dy);
+    goal.target=requestedTarget.map(targetLimit);
+    // Commit the pose before a finger can lift or join between animation frames.
+    camera.zoom=goal.zoom;camera.target=[...goal.target];dirty=true;
+    // Rebase on a limit so reversing direction works on the next movement.
+    if((span<=4&&length>4)||goal.zoom!==requestedZoom||goal.target.some((v,i)=>v!==requestedTarget[i]))beginPair();
+  }
   dragSurface.addEventListener('pointerdown',e=>{
     if(e.button!==0&&e.button!==1&&e.button!==2)return;
     if(e.pointerType==='mouse')e.preventDefault();
     canvas.focus({preventScroll:true});dragSurface.setPointerCapture(e.pointerId);
-    down.set(e.pointerId,{x:e.clientX,y:e.clientY});velocity=0;lastMove=performance.now();moved=down.size>1;pinch=distance();dragSurface.classList.add('holding');
+    down.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,touch:e.pointerType==='touch',orbitReady:false});
+    velocity=0;lastMove=performance.now();
+    if(down.size===1){
+      moved=false;
+      if(e.pointerType==='touch')Object.assign(goal,camera,{target:[...camera.target]});
+    }
+    if(down.size===2)beginPair();
+    dragSurface.classList.add('holding');
   });
   function pan(dx,dy){const [r,u]=cameraAxes(),factor=w/innerWidth/(unit*camera.zoom);
-    goal.target=goal.target.map((v,i)=>clamp(v-dx*factor*r[i]+dy*factor*u[i],i===1?-.8:-5.3,[17.4,7.5,5.3][i]));}
+    goal.target=goal.target.map((v,i)=>targetLimit(v-dx*factor*r[i]+dy*factor*u[i],i));}
   dragSurface.addEventListener('pointermove',e=>{
-    const old=down.get(e.pointerId);if(!old)return;const dx=e.clientX-old.x,dy=e.clientY-old.y;
-    old.x=e.clientX;old.y=e.clientY;if(Math.abs(dx)+Math.abs(dy)>1)moved=true;
-    if(down.size>1){const dist=distance();if(pinch>8&&dist>8)goal.zoom=clamp(goal.zoom*dist/pinch,.68,maxZoom);pinch=dist;velocity=0}
-    else if(e.pointerType==='mouse'&&(e.buttons&4)){pan(dx,dy);velocity=0}else{
-      const turn=-dx*TAU/Math.max(420,innerWidth*.86);goal.yaw+=turn;goal.pitch=clamp(goal.pitch+dy*.006,.065,1.34);
+    const finger=down.get(e.pointerId);if(!finger)return;
+    const dx=e.clientX-finger.x,dy=e.clientY-finger.y;
+    finger.x=e.clientX;finger.y=e.clientY;
+    if(pair){if(finger===pair.a||finger===pair.b)movePair();return}
+    const travel=Math.hypot(finger.x-finger.startX,finger.y-finger.startY);
+    if(finger.touch&&!finger.orbitReady&&travel<5)return;
+    finger.orbitReady=true;
+    if(travel>(finger.touch?5:2)){moved=true;lastTap=null}
+    if(e.pointerType==='mouse'&&(e.buttons&4)){pan(dx,dy);velocity=0}else{
+      const sensitivity=finger.touch?Math.PI/Math.max(330,Math.min(innerWidth,innerHeight)*.92):TAU/Math.max(420,innerWidth*.86);
+      const turn=-dx*sensitivity;goal.yaw+=turn;goal.pitch=clamp(goal.pitch+dy*(finger.touch?.0045:.006),.065,1.34);
       const now=performance.now(),dt=Math.max(10,now-lastMove);velocity=clamp(turn/dt*1000,-3,3);lastMove=now;
     }dirty=true;
   });
@@ -4183,19 +4222,30 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     if(!pt||camera.zoom>2.65){reset();return}goal.target=pt;goal.zoom=3.7;velocity=0;dirty=true;
   }
   function endPointer(e){
-    if(!down.has(e.pointerId))return;down.delete(e.pointerId);
+    const released=down.get(e.pointerId);if(!released)return;down.delete(e.pointerId);
+    if(pair&&(released===pair.a||released===pair.b)){
+      pair=null;velocity=0;lastMove=performance.now();
+      if(down.size>=2)beginPair();
+      else if(down.size===1){
+        const [finger]=down.values();finger.startX=finger.x;finger.startY=finger.y;finger.orbitReady=false;
+      }
+    }
+    if(e.type==='pointercancel'){moved=true;lastTap=null;velocity=0;}
     if(down.size===0){dragSurface.classList.remove('holding');if(performance.now()-lastMove>100)velocity=0;
       if(!moved&&e.type==='pointerup'&&e.button===0){
         const now=performance.now();if(lastTap&&now-lastTap.time<360&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<18){focusPoint(e.clientX,e.clientY);lastTap=null}
         else lastTap={x:e.clientX,y:e.clientY,time:now};
       }
-    }else{moved=true;pinch=distance()}
+    }
   }
   for(const type of ['pointerup','pointercancel','lostpointercapture'])dragSurface.addEventListener(type,endPointer);
   dragSurface.addEventListener('contextmenu',e=>e.preventDefault());
   dragSurface.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
   dragSurface.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);goal.zoom=clamp(goal.zoom*Math.exp(-delta*.0015),.68,maxZoom);velocity=0;dirty=true},{passive:false});
-  function releaseMovement(){movementKeys.clear();walker.stop();dirty=true}
+  function releaseMovement(){
+    movementKeys.clear();walker.stop();dirty=true;
+    down.clear();pair=null;lastTap=null;velocity=0;dragSurface.classList.remove('holding');
+  }
   addEventListener('blur',releaseMovement);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseMovement()});
   addEventListener('keyup',e=>movementKeys.delete(e.code));
@@ -4214,7 +4264,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     requestAnimationFrame(update);const interval=renderer.software?1000/18:1000/45;
     if(document.hidden||ts-frameStamp<interval-1)return;const dt=frameStamp<0?0:Math.min((ts-frameStamp)/1000,.075);frameStamp=ts;
     if(!down.size&&Math.abs(velocity)>.008&&!motionQuery.matches){goal.yaw+=velocity*dt;velocity*=Math.exp(-9.0*dt);dirty=true}
-    const f=motionQuery.matches?1:1-Math.exp(-17*dt);let dif=0;
+    const f=motionQuery.matches||down.values().next().value?.touch?1:1-Math.exp(-17*dt);let dif=0;
     for(const key of ['zoom','yaw','pitch']){dif+=Math.abs(goal[key]-camera[key]);camera[key]=mix(camera[key],goal[key],f)}
     for(let i=0;i<3;i++){dif+=Math.abs(goal.target[i]-camera.target[i]);camera.target[i]=mix(camera.target[i],goal.target[i],f)}
     const ripples=walker.state.ripples;
