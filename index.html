@@ -1,4 +1,10 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. A small robot sits beneath the tree to the left of the satellite dish. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk into the dome hatch or the red door beneath the alley lanterns. Double-click or double-tap either door to enter. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Relay Roost II · Field Sketch</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05060C;overscroll-behavior:none}body,canvas{touch-action:none;cursor:grab}body.holding,body.holding canvas{cursor:grabbing}canvas{width:100%;height:100%;display:block;outline:0;-webkit-tap-highlight-color:transparent}.room-status{position:fixed;bottom:6%;left:50%;transform:translateX(-50%);color:#f2dfbd;background:#1d252d;padding:.6em 1em;font:14px system-ui;pointer-events:none}.yard-challenge{position:fixed;z-index:2;transform:translate(-50%,-100%);border:1px solid #c2b388;background:#15232bf2;color:#fff3c6;padding:6px 11px 6px 6px;font:600 13px/1.1 system-ui;border-radius:4px;box-shadow:0 3px 11px #07121c93;cursor:pointer}
+.yard-challenge kbd{display:inline-block;border:1px solid #84948e;border-radius:2px;font:600 11px monospace;color:white;padding:2px 5px;margin-right:4px}
+.yard-cut{position:fixed;inset:0;z-index:20;background:#101f26;overflow:hidden;pointer-events:auto}
+.yard-cut i{position:absolute;left:0;width:100%;height:10.15%;background-size:100vw 100vh;background-repeat:no-repeat;animation:yard-slice .43s both steps(5,end);animation-delay:var(--lag)}
+@keyframes yard-slice{0%,23%{transform:none}53%{transform:translateX(var(--dx));filter:saturate(.4)}75%{opacity:.8;transform:translateX(calc(var(--dx)*-.65))}100%{transform:translateX(calc(var(--dx)*2));opacity:0}}
+@media(prefers-reduced-motion:reduce){.yard-cut{animation:yard-soft .16s both}@keyframes yard-soft{from{opacity:.12}to{opacity:1}}}
+</style></head><body><canvas tabindex="0" role="img" aria-label="A pen-and-watercolor wetland and rain-soaked nighttime neon alley joined by a mossy bridge. A citrus tree hangs over the wetland and a robot kingfisher perches by the water. A small robot sits under the left tree. Approach and press E to challenge him, or double-tap him and select Challenge. W and S move, A and D turn. Hold Shift with W to run. Drag to orbit, middle-drag to pan, scroll to zoom, and double-click a detail to focus. On touchscreens drag with one finger to orbit, drag two fingers together to pan, pinch to zoom around your fingertips, and double-tap to focus or reset. Walk into the dome hatch or the red door beneath the alley lanterns. Double-click or double-tap either door to enter. Inside, walk out through the illuminated sill, double-tap it, or press Escape to leave. B switches between light and dark paper outside. Home resets the view."></canvas><script>/*
 MIT License
 
 Copyright (c) 2026 siliconjungle
@@ -1389,13 +1395,13 @@ function makePaintedGeometry(){
     vertices.length=0;indices.length=0;patches.length=0;ranges.length=0;
     return mesh;
   }
-  return {panel,stroke,cap,ball,grid,finish};
+  return {panel,stroke,cap,ball,grid,finish,vertexCount:()=>vertices.length/6};
 }
 
 function makePaintedPass(gl,program,mesh,waterShader){
   const vs=`precision highp float;
     attribute vec3 position;attribute vec2 sampleUV;attribute float group;
-    uniform vec3 right,up,eye,focus,dishRoot,birdRoot,sweepPivot,robotTurn;uniform vec2 screen;uniform float zoom,clock;
+    uniform vec3 right,up,eye,focus,dishRoot,birdRoot,sweepPivot,robotTurn;uniform vec2 robotLift;uniform vec2 screen;uniform float zoom,clock;
     varying vec2 uv;varying vec3 worldPoint;varying float shade;
     void main(){
       vec3 p=position;float motion=floor(group);shade=1.-fract(group);
@@ -1405,7 +1411,7 @@ function makePaintedPass(gl,program,mesh,waterShader){
         vec3 d=p-root;p=root+vec3(cos(a)*d.x+sin(a)*d.z,d.y,-sin(a)*d.x+cos(a)*d.z);
         if(motion==3.)p.y+=.018*sin(clock*2.);
       }
-      ${mesh.robotPivot?`if(motion==4.){float c=cos(robotTurn.z),s=sin(robotTurn.z);vec2 d=p.xz-robotTurn.xy;p.xz=robotTurn.xy+vec2(c*d.x+s*d.y,c*d.y-s*d.x);}`:''}
+      ${mesh.robotPivot?`if(motion==14.||motion==15.||motion==4.)p.y+=robotLift.x*(motion==15.?smoothstep(.10,.28,p.y-robotLift.y):1.);if(motion==4.){float c=cos(robotTurn.z),s=sin(robotTurn.z);vec2 d=p.xz-robotTurn.xy;p.xz=robotTurn.xy+vec2(c*d.x+s*d.y,c*d.y-s*d.x);}`:''}
       ${mesh.scanner?`if(motion==13.){float a=clock*.58;vec2 d=p.xy-sweepPivot.xy;p.xy=sweepPivot.xy+mat2(cos(a),-sin(a),sin(a),cos(a))*d;}`:''}
       if(motion==5.){p.x+=.022*sin(p.z*1.9+clock*1.13);p.z+=.013*sin(p.x+clock*.92);}
       vec3 d=p-focus;gl_Position=vec4(vec2(dot(d,right),dot(d,up))*zoom*2./screen,-dot(d,eye)/24.,1.);
@@ -1443,13 +1449,14 @@ function makePaintedPass(gl,program,mesh,waterShader){
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,mesh.width,mesh.height,0,gl.RGBA,gl.UNSIGNED_BYTE,mesh.atlas);
   const attrs=[['position',3,0],['sampleUV',2,12],['group',1,20]].map(([name,size,offset])=>[gl.getAttribLocation(pg,name),size,offset]);
   const uniforms={};
-  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','sweepPivot','robotTurn','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
+  for(const n of ['right','up','eye','focus','clock','screen','zoom','dishRoot','birdRoot','sweepPivot','robotTurn','robotLift','walkerFoot','palette','rainField','reflection','rainMap','ripples[0]'])uniforms[n]=gl.getUniformLocation(pg,n);
   return function(axes,focus,scale,w,h,clock,world,walker,rain){
     const u=uniforms;
     gl.useProgram(pg);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(u.palette,3);
     gl.uniform1i(u.reflection,0);gl.uniform1i(u.rainField,1);gl.uniform4f(u.rainMap,rain.left,rain.back,rain.resolution/rain.cols,rain.resolution/rain.rows);
     gl.uniform3fv(u.right,axes[0]);gl.uniform3fv(u.up,axes[1]);gl.uniform3fv(u.eye,axes[2]);gl.uniform3fv(u.focus,focus);
-    if(mesh.robotPivot)gl.uniform3f(u.robotTurn,mesh.robotPivot[0],mesh.robotPivot[2],yardRobotGlance(clock));
+    if(mesh.robotPivot)gl.uniform2f(u.robotLift,world.yardRobot.rise,world.yardRobot.footY);
+    if(mesh.robotPivot)gl.uniform3f(u.robotTurn,mesh.robotPivot[0],mesh.robotPivot[2],world.yardRobot.turn);
     if(mesh.scanner)gl.uniform3fv(u.sweepPivot,mesh.scanner);
     gl.uniform3fv(u.dishRoot,mesh.turntable||world.dishPivot);gl.uniform3fv(u.birdRoot,world.birdPivot);gl.uniform3f(u.walkerFoot,walker.x,walker.y,walker.z);
     gl.uniform3fv(u['ripples[0]'],walker.ripples);gl.uniform2f(u.screen,w,h);gl.uniform1f(u.clock,clock);gl.uniform1f(u.zoom,scale);
@@ -1473,10 +1480,13 @@ function makeSoftwarePainted(mesh,world){
     const [right,up,eye]=axes;
     const dish=mesh.turntable?time*.17:.078*Math.sin(time*.32),scan=Math.sin(time*.93+.55),bird=.50*scan/(Math.abs(scan)+.16)+.09*Math.sin(time*2);
     const cosD=Math.cos(dish),sinD=Math.sin(dish),cosB=Math.cos(bird),sinB=Math.sin(bird),bob=.018*Math.sin(time*2);
-    const glance=mesh.robotPivot?yardRobotGlance(time):0,robotCos=Math.cos(glance),robotSin=Math.sin(glance);
+    const glance=mesh.robotPivot?world.yardRobot.turn:0,robotCos=Math.cos(glance),robotSin=Math.sin(glance);
     const sweepCos=Math.cos(time*.58),sweepSin=Math.sin(time*.58);
     for(let i=0,j=0;i<verts.length;i+=6,j+=4){
       let x=verts[i],y=verts[i+1],z=verts[i+2];const group=Math.floor(verts[i+5]);
+      if(mesh.robotPivot&&(group===4||group===14||group===15)){
+        const k=Math.max(0,Math.min(1,(y-world.yardRobot.footY-.10)/.18));y+=world.yardRobot.rise*(group===15?k*k*(3-2*k):1);
+      }
       if(group===2||group===3){
         const root=group===2?(mesh.turntable||world.dishPivot):world.birdPivot,c=group===2?cosD:cosB,s=group===2?sinD:sinB;
         const dx=x-root[0],dz=z-root[2];
@@ -2351,9 +2361,10 @@ function buildNeonAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,mo
 if(typeof module!=='undefined'&&module.exports)module.exports=buildNeonAlley;
 
 // A little retired yard machine. Local +Z points out from the tree into the clearing.
-function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
+function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup,standing=false,part=()=>{}}){
+  function limb(n){part(n);if(!standing)setGroup(n===6?4:n===2||n===3?15:14);}
   const x=tree[0]+.14,z=tree[2]+.47,y=land(x,z);
-  const angle=.13,cs=Math.cos(angle),sn=Math.sin(angle);
+  const angle=standing?0:.13,cs=Math.cos(angle),sn=Math.sin(angle);
   const p=([u,h,v])=>[x+u*cs+v*sn,y+h,z-u*sn+v*cs];
   const iron=[52,65,74],joint=[36,42,48],steel=[161,174,172],edge=[206,213,192];
   const blue=[128,160,174],pale=[174,197,197],oxide=[160,70,49],brass=[190,145,88];
@@ -2378,18 +2389,22 @@ function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
   }
   const ground=(u,v)=>{const [gx,,gz]=p([u,0,v]);return land(gx,gz)-y;};
   // A low spent battery takes his weight. Its grooved case is visible from the back.
+  if(!standing){
   stamping(0,-.035,[[-.08,.21,.145,.04],[.19,.22,.15,.04],[.215,.205,.14,.035]],[iron,brass]);
   for(const side of [-1,1]){
     rod([side*.13,.07,-.19],[side*.13,.18,-.19],.013,steel);
   }
+  }
+  limb(1);
   stamping(0,-.002,[[.21,.14,.115,.05],[.26,.19,.14,.045],[.36,.15,.13,.045]],[iron,joint]);
   stamping(0,-.006,[[.33,.14,.115,.045],[.51,.231,.156,.057],[.58,.202,.145,.046]],[blue,pale]);
   for(let j=0;j<3;j++)rod([-.095,.37+.033*j,.145],[.10,.37+.033*j,.145],.010,joint);
   for(const s of [-1,1]){
     // One foot is pulled in. The other heel has slid downhill.
-    const toe=s<0?.43:.56,footX=s*(s<0?.24:.27),sole=ground(footX,toe);
-    const knee=[s*.203,s<0?.384:.303,toe-.14],heel=[footX,sole+.093,toe-.068];
-    piston([s*.103,.258,.04],knee,.076,.083,iron);
+    limb(s<0?2:3);
+    const toe=standing?(s<0?.16:-.06):(s<0?.43:.56),footX=s*(s<0?.24:.27),sole=ground(footX,toe);
+    const knee=[s*.203,standing?.31:(s<0?.384:.303),standing?toe+.01:toe-.14],heel=[footX,sole+.093,toe-.068];
+    piston([s*.103,standing?.458:.258,.04],knee,.076,.083,iron);
     piston(knee,heel,.058,.039,steel);
     piston([knee[0],knee[1]-.034,knee[2]+.004],[heel[0],heel[1]+.059,heel[2]],.075,.061,blue);
     piston([knee[0]-s*.054,knee[1],knee[2]],[knee[0]+s*.063,knee[1],knee[2]],.084,.077,joint);
@@ -2403,7 +2418,8 @@ function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
     stamping(footX,toe,[[sole-.016,.092,.139,.031],[sole+.029,.104,.147,.039],[sole+.086,.092,.127,.036],[sole+.104,.067,.07,.027]],[joint,blue,pale]);
     for(const off of [-.033,.033])rod([footX+off,sole+.082,toe+.102],[footX+off,sole+.073,toe+.131],.006,iron);
     // Elbows point out; the forearms fall forward to rest across the knees.
-    const shoulder=[s*.22,.515,.012],elbow=[s*.313,s<0?.445:.395,.126],wrist=[s*.215,knee[1]+.075,knee[2]+.035];
+    limb(s<0?4:5);
+    const shoulder=[s*.22,.515,.012],elbow=[s*.313,standing?.34:(s<0?.445:.395),.126],wrist=[s*.215,standing?.32:knee[1]+.075,standing?.29:knee[2]+.035];
     bearing(shoulder,.072,joint);
     piston(shoulder,elbow,.052,.05,steel);
     stamping(s*.234,.022,[[.475,.076,.091,.030],[.549,.086,.097,.030],[.59,.058,.073,.025]],[s<0?oxide:blue,pale]);
@@ -2416,9 +2432,10 @@ function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
       rod(a,b,.014,steel);rod(b,[b[0]-s*.007,b[1]-.025,b[2]-.006],.010,iron);
     }
   }
+  limb(1);
   piston([0,.55,-.03],[0,.664,.018],.079,.083,joint);
   const pivot=p([0,.623,.015]);
-  setGroup(4);
+  limb(6);
   // Split brow, recessed optical slit and a perforated jaw. Both lenses sit behind the armor lip.
   stamping(0,.018,[[.592,.149,.105,.045],[.643,.206,.144,.050],[.714,.241,.157,.047],
     [.852,.257,.157,.057],[.928,.213,.125,.051],[.951,.139,.086,.04]],[iron,blue,iron,blue,pale]);
@@ -2451,7 +2468,7 @@ function buildYardRobot({tree,land,quad,line,pipe,ellipsoid,barrier,setGroup}){
   setGroup(0);
   const left=p([-.195,0,.31]),right=p([.20,0,.42]);
   barrier(x,z,.242);barrier(left[0],left[2],.114,right[0],right[2]);
-  return {pivot,focus:p([0,.54,.14])};
+  return {pivot,rise:0,footY:y,focus:p([0,.54,.14])};
 }
 
 // A short, deliberate look to the side, then a long hold.
@@ -2712,6 +2729,7 @@ function orbitalRoost({makeBuilder}) {
 
     // The great dish. Twelve separate concave porcelain petals, red calibration bands,
     // a carbon truss on the reverse, and a suspended receiver at the focus.
+    const dishMeshStart=painted.vertexCount();
     const mast=[-2.20,0,-1.45],dx=mast[0],dz=mast[2],center=[dx,3.74,dz];
     upright(dx,.47,dz,1.18,.40,C.basalt,.085,8,1.12);
     upright(dx,.87,dz,1.02,.24,C.celadon,.08,12,.93);
@@ -2729,6 +2747,7 @@ function orbitalRoost({makeBuilder}) {
       pipe([dx+s*.46,2.64,dz+.08],[dx+s*.42,3.39,dz-.13],.06,.058,C.brass,.05,10);
       for(const y of [1.44,1.59,1.73])line([dx+s*.39,y,dz+.17],[dx+s*.62,y,dz+.17],.046,C.iron);
     }
+    const dishMountEnd=painted.vertexCount();
     group=2;
     const arrN=unit([.34,.69,.64]),u=unit(cross(Y,arrN)),v=unit(cross(arrN,u)),radius=2.32;
     const dish=(r,a,back=0)=>add(add(add(center,u,r*Math.cos(a)),v,r*Math.sin(a)),arrN,.165*r*r+back);
@@ -2810,6 +2829,7 @@ function orbitalRoost({makeBuilder}) {
     ring(add(center,arrN,.258),u,v,.12,.021,C.lit,true,32);
     for(let k=0;k<8;k++){const a=k*TAU/8,at=add(add(add(center,arrN,.255),u,.22*Math.cos(a)),v,.22*Math.sin(a));B.iso(...at,.023,C.ivory,3);mode.push(group);}
     group=0;
+    const dishMeshEnd=painted.vertexCount();
     // A sealed pressure cabin and its service deck. The fittings continue around the back.
     const hx=1.38,hz=-1.56,hr=1.24;
     upright(hx,.54,hz,1.43,.27,C.basalt,.087,16);
@@ -3147,6 +3167,7 @@ function orbitalRoost({makeBuilder}) {
     const bp=[px-.03,2.92,pz+.01],forward=unit([-.99,0,.12]),side=unit([.12,0,.99]);
     const bird=(x,y,z)=>add(add(add(bp,forward,x),Y,y),side,z);
     pipe(bird(-.54,-.37,0),bird(.52,-.37,0),.066,.066,C.brass,.038,10);
+    const birdMeshStart=painted.vertexCount();
     function birdOval(center,radii,palette,turn=0,step=.034){
       const first=mode.length,[rx,ry,rz]=radii,n=Math.max(30,Math.ceil(4.3*Math.PI*(rx*ry+rx*rz+ry*rz)/3/step**2)),cs=Math.cos(turn),sn=Math.sin(turn);
       for(let j=0;j<n;j++){
@@ -3193,6 +3214,7 @@ function orbitalRoost({makeBuilder}) {
     B.iso(...bird(.008,.819,-.015),.032,C.tangerine,3);mode.push(3);
     group=0;
 
+    const birdMeshEnd=painted.vertexCount();
     // Small signal lamps and a cable at the rear give the reverse view its own details.
     cable([[-2.9,.87,-2.02],[-3.20,.92,-2.67],[-2.58,.89,-3.09],[-.5,.86,-2.96],[.4,.93,-2.74]],.063,C.rust);
     for(let j=0;j<3;j++){
@@ -3244,7 +3266,8 @@ function orbitalRoost({makeBuilder}) {
     const alley=makeAlley({box,quad,line,cable,pipe,upright,ring,barrier,haloes,motes,n3,pointCount:()=>mode.length,rr,dab,fern,ellipsoid,pen});
     const yardRobot=buildYardRobot({tree:leftTree,land,quad,line,pipe,ellipsoid,barrier,setGroup:value=>{group=value}});
     const world=B.finish({cam:{target:[5.94,1.88,0],pitch:.46,yaw:-.28,dist:30},detail:18,radius:12,dither:.25});
-    world.yardRobot=yardRobot;
+    world.yardRobot=yardRobot;world.yardRobot.turn=0;
+    world.relayModels={dish:[dishMeshStart,dishMountEnd,dishMeshEnd],dishBase:[dx,.47,dz],bird:[birdMeshStart,birdMeshEnd],birdOrigin:bp};
     world.citrusMesh=Float32Array.from(citrusMesh);world.mode=Uint8Array.from(mode);world.dishPivot=center;world.birdPivot=birdJoint;world.haloes=haloes;world.motes=motes;world.steam=alley.steam;
     // Bake soft sun occlusion into the pigments, including the water under the bridge.
     const sideSun=unit(cross(Y,light)),upSun=cross(light,sideSun),N=780,pxScale=19;
@@ -3732,18 +3755,19 @@ function makeRoostCharacter(makeBuilder){
     const swing=Math.sin(p.phase),beat=Math.cos(p.phase*2),g=p.stride,run=p.run;
     const bob=(1-beat)*.016*g+.003*(1-g)*Math.sin(time*2.2);
     setBone(hips,0,p.yaw,0,[p.x/scale,p.y/scale+bob,p.z/scale]);
-    setBone(spine,.025+run*g*.10,.075*swing*g,-.024*swing*g);
+    const kick=p.kick||0,brace=p.brace||0,call=p.call||0;
+    setBone(spine,.025+run*g*.10+.24*brace-.15*kick,.075*swing*g+.12*kick,-.024*swing*g);
     setBone(head,-.035,.04*Math.sin(time*.85)*(1-g)-.08*swing*g,.015*Math.sin(time*.67)*(1-g));
     setBone(hair,-.046*g*(1+Math.cos(p.phase))-.018*Math.sin(time*1.5),-.042*swing*g-.035*p.turn,.02*swing*g);
     setBone(skirt,-.055*g,.023*swing*g,.034*swing*g);
     for(const {s,thigh,shin,shoe,upper,fore} of limbs){
       const leg=s*swing,amplitude=.51+.29*run;
       const bend=(.04+Math.max(0,Math.cos(p.phase)*s)*(.49+run*.48))*g;
-      setBone(thigh,-leg*amplitude*g-bend*.36,0,s*.017);
-      setBone(shin,bend);
+      setBone(thigh,-leg*amplitude*g-bend*.36-(s>0?1.30:.12)*kick-.23*brace,0,s*.017);
+      setBone(shin,bend+.48*brace+.14*kick);
       setBone(shoe,leg*amplitude*g*.62-bend*.52);
-      setBone(upper,leg*(.48+run*.28)*g-.045,0,s*(.044+.022*g));
-      setBone(fore,-.14-(.27+run*.40)*g+leg*.13*g);
+      setBone(upper,leg*(.48+run*.28)*g-.045-.65*brace-(s>0?.58:0)*call,0,s*(.044+.022*g+.16*brace));
+      setBone(fore,-.14-(.27+run*.40)*g+leg*.13*g-1.12*brace-(s>0?1.65:0)*call);
     }
     fitSkirt();
     const r=rest.data;
@@ -4100,7 +4124,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   const vertex=`
     precision highp float;
     attribute vec3 pos, pigment, cov0, cov1;attribute float kind;
-    uniform vec3 right,up,eye,focus,birdRoot,dishRoot,feet,ripples[3];uniform vec3 robotTurn;uniform vec2 screen;uniform float zoom,clock,reflectPass;
+    uniform vec3 right,up,eye,focus,birdRoot,dishRoot,feet,ripples[3];uniform vec3 robotTurn;uniform vec2 robotLift;uniform vec2 screen;uniform float zoom,clock,reflectPass;
     varying vec3 ink,conic,worldPoint;varying float size,water;
     mat3 rotateY(float t){float c=cos(t),s=sin(t);return mat3(c,0.,-s,0.,1.,0.,s,0.,c);}
     void main(){
@@ -4108,6 +4132,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
       if(mode==2.){rot=rotateY(.078*sin(clock*.32));p=dishRoot+rot*(p-dishRoot);}
       if(mode==3.){float scan=sin(clock*.93+.55);float t=.50*scan/(abs(scan)+.16)+.09*sin(clock*2.0);
         rot=rotateY(t);p=birdRoot+rot*(p-birdRoot);p.y+=.018*sin(clock*2.0);}
+      if(mode==4.||mode==14.||mode==15.)p.y+=robotLift.x*(mode==15.?smoothstep(.10,.28,p.y-robotLift.y):1.);
       if(mode==4.){rot=rotateY(robotTurn.z);vec3 root=vec3(robotTurn.x,0.,robotTurn.y);p=root+rot*(p-root);}
       if(mode==11. && reflectPass<.5){gl_Position=vec4(3.,3.,2.,1.);gl_PointSize=1.;return;}
       if(mode==5.||mode==11.){p.x+=.022*sin(p.z*1.9+clock*1.13);p.z+=.013*sin(p.x+clock*.92);}
@@ -4203,7 +4228,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     const drawMotes=makeMotePass(gl,program,world.motes,sketch.color);
     const drawPainted=makePaintedPass(gl,program,world.painted,waterShader);
     const drawCitrus=makeCitrusPass(gl,program,world.citrusMesh);
-    const u={};for(const key of ['right','up','eye','focus','birdRoot','dishRoot','robotTurn','screen','zoom','clock','reflectPass','reflection','rainField','rainMap','feet'])u[key]=gl.getUniformLocation(pg,key);
+    const u={};for(const key of ['right','up','eye','focus','birdRoot','dishRoot','robotTurn','robotLift','screen','zoom','clock','reflectPass','reflection','rainField','rainMap','feet'])u[key]=gl.getUniformLocation(pg,key);
     u.ripples=gl.getUniformLocation(pg,'ripples[0]');
     const tex=gl.createTexture(),fb=gl.createFramebuffer(),depth=gl.createRenderbuffer(),blank=gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D,blank);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(4));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
@@ -4226,7 +4251,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     function bind(buffer,attributes,stride){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);for(const [a,n,o] of attributes){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,stride,o)}}
     const roomPasses=new WeakMap();
     let rw=0,rh=0,lastReflection=-2,oldPose='';
-    function uniforms(us,axes,sw,sh,scale,time){if(us.robotTurn)gl.uniform3f(us.robotTurn,world.yardRobot.pivot[0],world.yardRobot.pivot[2],yardRobotGlance(time));gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
+    function uniforms(us,axes,sw,sh,scale,time){if(us.robotLift)gl.uniform2f(us.robotLift,world.yardRobot.rise,world.yardRobot.footY);if(us.robotTurn)gl.uniform3f(us.robotTurn,world.yardRobot.pivot[0],world.yardRobot.pivot[2],world.yardRobot.turn);gl.uniform3fv(us.right,axes[0]);gl.uniform3fv(us.up,axes[1]);gl.uniform3fv(us.eye,axes[2]);gl.uniform3fv(us.focus,camera.target);gl.uniform3fv(us.birdRoot,world.birdPivot);gl.uniform3fv(us.dishRoot,world.dishPivot);gl.uniform2f(us.screen,sw,sh);gl.uniform1f(us.zoom,scale);gl.uniform1f(us.clock,time)}
     return {resize(){
       sketch.resize(w,h);
       rw=Math.max(1,Math.round(w*.56));rh=Math.max(1,Math.round(h*.56));gl.bindTexture(gl.TEXTURE_2D,tex);
@@ -4355,7 +4380,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   try{renderer=webGL(canvas)}catch(err){console.warn(err)}
   function fallback(){const el=canvas.cloneNode();canvas.replaceWith(el);canvas=el;renderer=cpu(el)}
   if(!renderer)fallback();else canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();fallback();resize()},{once:true});
-  function resize(){const sw=innerWidth,sh=innerHeight,quality=renderer.software?.72:1.17;
+  function resize(){if(battleScreen?.destroy&&canvas.hidden)return;const sw=innerWidth,sh=innerHeight,quality=renderer.software?.72:1.17;
     const ratio=Math.min(quality*(devicePixelRatio||1), (renderer.software?660:1440)/Math.max(sw,sh));
     w=canvas.width=Math.max(1,Math.round(sw*ratio));h=canvas.height=Math.max(1,Math.round(sh*ratio));
     unit=fitScale();poseActor(age);renderer.resize();renderer.draw(age);dirty=true;
@@ -4391,7 +4416,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     if((span<=4&&length>4)||goal.zoom!==requestedZoom||goal.target.some((v,i)=>v!==requestedTarget[i]))beginPair();
   }
   dragSurface.addEventListener('pointerdown',e=>{
-    if(switching||(e.button!==0&&e.button!==1&&e.button!==2))return;
+    if(battleScreen||e.target.closest?.('button')||switching||(e.button!==0&&e.button!==1&&e.button!==2))return;
     if(e.pointerType==='mouse')e.preventDefault();
     canvas.focus({preventScroll:true});dragSurface.setPointerCapture(e.pointerId);
     down.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,touch:e.pointerType==='touch',orbitReady:false});
@@ -4504,7 +4529,15 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   }
   function followLocation(){
     const hash=location.hash.slice(1);
-    const view=hash==='robot'?robotView:hash==='alley-door'||hash==='backrooms'?alleyView:null;
+    if(hash==='battle'){
+      if(!battleScreen){
+        if(interior||switching)changeRoom('',false).then(()=>{if(location.hash==='#battle'&&!interior&&!switching)startBattle()});
+        else startBattle();
+      }
+      return;
+    }
+    if(battleScreen)endBattle(false);
+    const view=hash==='challenge'?challengeView:hash==='robot'?robotView:hash==='alley-door'||hash==='backrooms'?alleyView:null;
     const frameView=()=>{Object.assign(camera,copyView(view));Object.assign(goal,copyView(camera));dirty=true};
     if(view&&!interior)frameView();
     changeRoom(Object.hasOwn(doors,hash)?hash:'',false).then(()=>{
@@ -4524,6 +4557,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
     return best;
   }
   function focusPoint(clientX,clientY){
+    if(!interior&&robotHit(clientX,clientY)){remoteChallenge=true;showChallenge(true);return}
     const hit=doorHit(clientX,clientY);if(hit!==null){changeRoom(hit);return}
     const [r,u,e]=cameraAxes(),s=unit*camera.zoom,px=(clientX/innerWidth-.5)*w,py=(.5-clientY/innerHeight)*h;
     let nearest=-Infinity,pt=null,limit=(Math.max(4,w/135))**2;
@@ -4559,7 +4593,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   for(const type of ['pointerup','pointercancel','lostpointercapture'])dragSurface.addEventListener(type,endPointer);
   dragSurface.addEventListener('contextmenu',e=>e.preventDefault());
   dragSurface.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
-  dragSurface.addEventListener('wheel',e=>{e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);goal.zoom=clamp(goal.zoom*Math.exp(-delta*.0015),.68,maxZoom);velocity=0;dirty=true},{passive:false});
+  dragSurface.addEventListener('wheel',e=>{if(battleScreen)return;e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);goal.zoom=clamp(goal.zoom*Math.exp(-delta*.0015),.68,maxZoom);velocity=0;dirty=true},{passive:false});
   function releaseMovement(){
     movementKeys.clear();walker.stop();dirty=true;
     down.clear();pair=null;lastTap=null;velocity=0;dragSurface.classList.remove('holding');
@@ -4569,6 +4603,8 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   addEventListener('keyup',e=>movementKeys.delete(e.code));
   addEventListener('keydown',e=>{
     if(e.altKey||e.metaKey||e.ctrlKey)return;
+    if(battleScreen){if(e.key==='Escape'&&!canvas.hidden){e.preventDefault();endBattle(true)}return;}
+    if(e.code==='KeyE'&&!interior&&!switching&&canChallenge()){e.preventDefault();if(!e.repeat)startBattle();return}
     if(e.key==='Escape'&&(interior||switching)){e.preventDefault();changeRoom('');return}
     if(switching)return;
     if(walkCodes.has(e.code)){
@@ -4582,7 +4618,7 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
   });
   function update(ts){
     requestAnimationFrame(update);const interval=renderer.software?1000/18:1000/45;
-    if(switching||document.hidden||ts-frameStamp<interval-1)return;const dt=frameStamp<0?0:Math.min((ts-frameStamp)/1000,.075);frameStamp=ts;
+    if(battleScreen||switching||document.hidden||ts-frameStamp<interval-1)return;const dt=frameStamp<0?0:Math.min((ts-frameStamp)/1000,.075);frameStamp=ts;
     if(!down.size&&Math.abs(velocity)>.008&&!motionQuery.matches){goal.yaw+=velocity*dt;velocity*=Math.exp(-9.0*dt);dirty=true}
     const f=motionQuery.matches||down.values().next().value?.touch?1:1-Math.exp(-17*dt);let dif=0;
     for(const key of ['zoom','yaw','pitch']){dif+=Math.abs(goal[key]-camera[key]);camera[key]=mix(camera[key],goal[key],f)}
@@ -4599,8 +4635,86 @@ function refractSoftwarePuddles(rain,pixels,original,wet,axes,target,scale,w,h){
       }
     }
     if(!motionQuery.matches)age+=dt;
+    if(!interior)updateRobotLook(dt);else showChallenge(false);
     if(dirty||dif>.00005||!motionQuery.matches){unit=fitScale();poseActor(age);renderer.draw(age);dirty=false}
   }
+    let battleScreen=null,battleScript=null,battleGeneration=0,remoteChallenge=false,watching=false,sulking=false,returnHash='';
+  const challenge=document.createElement('button');challenge.type='button';challenge.className='yard-challenge';challenge.hidden=true;challenge.setAttribute('aria-label','Challenge the yard robot');
+  challenge.innerHTML='<kbd>E</kbd> Challenge';document.body.append(challenge);
+  challenge.addEventListener('click',()=>{if(canChallenge())startBattle()});
+  function robotDistance(){const p=outdoorWalker.state,q=world.yardRobot.pivot;return Math.hypot(p.x-q[0],p.z-q[2]);}
+  function canChallenge(){return !interior&&!switching&&!battleScreen&&(remoteChallenge||robotDistance()<1.53);}
+  function showChallenge(visible){
+    challenge.hidden=!visible;if(!visible)return;
+    const [x,y,z]=world.yardRobot.focus,screen=projected([x,y+.64,z]);
+    challenge.style.left=clamp(screen[0],67,innerWidth-67)+'px';challenge.style.top=clamp(screen[1]-8,36,innerHeight-45)+'px';
+  }
+  function robotHit(x,y){const [px,py]=projected(world.yardRobot.focus),radius=unit*camera.zoom*innerWidth/w;
+    return Math.abs(x-px)<Math.max(19,radius*.43)&&Math.abs(y-py)<Math.max(20,radius*.58);}
+  function updateRobotLook(dt){
+    const r=world.yardRobot,p=outdoorWalker.state,d=robotDistance();watching=d<(watching?2.55:2.15);
+    if(movementKeys.size&&d>1.53)remoteChallenge=false;
+    let aim=sulking?-.72:yardRobotGlance(age);
+    if(watching&&!sulking){const a=Math.atan2(p.x-r.pivot[0],p.z-r.pivot[2])-.13;aim=clamp(Math.atan2(Math.sin(a),Math.cos(a)),-1.24,1.24)}
+    if(d>2.7)sulking=false;
+    const old=r.turn;r.turn+=clamp(aim-r.turn,-dt*2.6,dt*2.6);if(Math.abs(r.turn-old)>.00001)dirty=true;
+    showChallenge(canChallenge());
+  }
+  const treePivot=world.yardRobot.pivot,challengeView={...robotView,zoom:4.45,target:[treePivot[0]+.20,treePivot[1]+.14,treePivot[2]+.48]};
+  function stageChallenge(){
+    const robot=world.yardRobot.pivot,p=outdoorWalker.state;p.x=robot[0]+.37;p.z=robot[2]+1.01;p.floor=p.y=outdoorWalker.ground(p.x,p.z);
+    p.yaw=Math.atan2(robot[0]-p.x,robot[2]-p.z);
+    Object.assign(camera,copyView(challengeView));Object.assign(goal,copyView(camera));
+  }
+  function loadBattle(){
+    if(battleScript)return battleScript;
+    if(typeof window.createYardBattle==='function')return Promise.resolve();
+    battleScript=new Promise((ok,fail)=>{
+      const tag=document.createElement('script');let timeout;
+      const bad=()=>{clearTimeout(timeout);tag.remove();battleScript=null;fail(Error('Battle file could not load'))};
+      tag.onload=()=>{clearTimeout(timeout);if(typeof window.createYardBattle==='function')ok();else bad()};tag.onerror=bad;
+      timeout=setTimeout(bad,18000);tag.src=new URL('yard-battle.js',document.baseURI).href;document.head.append(tag);
+    });return battleScript;
+  }
+  function glitch(){
+    const layer=document.createElement('div');layer.className='yard-cut';layer.setAttribute('aria-hidden','true');
+    if(!motionQuery.matches){
+      const freeze=canvas.toDataURL('image/jpeg',.80);
+      for(let k=0;k<10;k++){const band=document.createElement('i');band.style.cssText='top:'+k*10+'%;background-position-y:'+(k*100/9)+'%;--dx:'+((k%2?-1:1)*(3+(k*7)%22))+'vw;--lag:'+(k%3)*30+'ms';band.style.backgroundImage='url('+freeze+')';layer.append(band);}
+    }
+    document.body.append(layer);return layer;
+  }
+  async function startBattle(){
+    if(interior||switching||battleScreen)return;
+    const id=++battleGeneration;returnHash=location.hash==='#battle'?'challenge':location.hash.slice(1);
+    releaseMovement();showChallenge(false);remoteChallenge=false;
+    battleScreen={cut:null,destroy(){}};
+    const opening=async()=>{
+      if(!motionQuery.matches){
+        const start=performance.now();await new Promise(resolve=>{
+          const stand=now=>{if(id!==battleGeneration)return resolve();const t=clamp((now-start)/360,0,1);
+            world.yardRobot.rise=.22*t*t*(3-2*t);renderer.draw(age);if(t===1)resolve();else requestAnimationFrame(stand)};
+          requestAnimationFrame(stand);
+        });
+      }
+      if(id!==battleGeneration)return;
+      battleScreen.cut=glitch();await new Promise(resolve=>setTimeout(resolve,motionQuery.matches?65:455));
+    };
+    try{
+      await Promise.all([loadBattle(),opening()]);if(id!==battleGeneration)return;
+      const cut=battleScreen.cut;
+      const live=window.createYardBattle({world,actor,reduced:motionQuery,leave:won=>endBattle(true,won)});
+      battleScreen={...live,cut};canvas.dataset.scene='battle';canvas.hidden=true;
+      syncHash('battle');cut.remove();live.focus();
+    }catch(err){if(id!==battleGeneration)return;endBattle(false);if(location.hash==='#battle')syncHash('challenge',true);roomStatus('The clearing could not open. Press E to try again.');console.warn(err)}
+  }
+  function endBattle(writeHash,won=false){
+    if(!battleScreen)return;++battleGeneration;const old=battleScreen;battleScreen=null;
+    old.destroy();old.cut?.remove();world.yardRobot.rise=0;sulking=won;canvas.hidden=false;canvas.dataset.scene='islands';releaseMovement();
+    if(writeHash)syncHash(returnHash,true);frameStamp=-1;resize();canvas.focus({preventScroll:true});updateRobotLook(.10);dirty=true;
+  }
+
+  if(location.hash==='#challenge'||location.hash==='#battle'){stageChallenge()}
   if(location.hash==='#alley-door'){
     const d=doors.backrooms,p=outdoorWalker.state;
     p.x=d.x-.79;p.z=d.threshold+1.10;p.floor=p.y=outdoorWalker.ground(p.x,p.z);
