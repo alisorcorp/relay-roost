@@ -1,6 +1,6 @@
 'use strict';
 (()=>{
-const battleStyles=".relay-duel{--ink:#edf3d8;--gold:#f0ce78;--line:#c5c7a04a;--glass:#12252bf0;position:fixed;inset:0;overflow:hidden;isolation:isolate;background:#759cc3;font-family:'Avenir Next',Avenir,system-ui,sans-serif;color:var(--ink);cursor:default;touch-action:none}\n.relay-duel *{box-sizing:border-box}.relay-duel canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}.relay-duel canvas:active{cursor:grabbing}\n.relay-duel button{font:inherit;color:inherit;cursor:pointer}.relay-duel button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}\n.duel-top{position:absolute;inset:clamp(12px,2.8vh,27px) clamp(12px,3vw,42px) auto;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}\n.duel-foe,.duel-menu,.duel-intent,.duel-exit,.duel-result{background:var(--glass);border:1px solid var(--line);box-shadow:0 3px 14px #1524222b}\n.duel-foe{width:clamp(162px,20vw,258px);border-left:3px solid #cf795d;padding:9px 13px 11px}\n.duel-name,.duel-status,.duel-commands,.duel-command,.duel-health,.duel-outcomes{display:flex;align-items:center}\n.duel-name,.duel-status{justify-content:space-between;gap:12px;font-weight:650;font-size:14px}\n.duel-foe small,.duel-status small{font:11px ui-monospace,monospace;color:#c3d4c6}\n.duel-bar{display:block;height:4px;margin-top:6px;background:#676f5c70;overflow:hidden}.duel-bar i{display:block;height:100%;background:#d89978;transition:width .30s}\n.duel-exit{pointer-events:auto;width:36px;height:36px;font:22px/1 system-ui!important}\n.duel-dock{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:clamp(12px,3vw,42px);right:clamp(12px,3vw,42px);display:flex;align-items:flex-end;justify-content:space-between;gap:12px;pointer-events:none}\n.duel-menu{padding:11px 14px 13px;pointer-events:auto;width:min(410px,64vw);border-top:2px solid var(--gold)}\n.duel-status{font-size:14px}.duel-health{gap:8px}.duel-health .duel-bar{width:56px;margin:0}.duel-health i{background:#9fca96}.duel-signal{color:var(--gold);font:12px ui-monospace,monospace;letter-spacing:1px}\n.duel-commands{margin-top:10px;gap:5px}.duel-command,.duel-outcomes button{border:1px solid var(--line);background:#33464b;color:var(--ink);border-radius:2px;padding:8px 12px;gap:8px;font-size:14px!important;font-weight:600!important}\n.duel-command[aria-disabled=true]{opacity:.5}.duel-command:not([aria-disabled=true]):hover,.duel-outcomes button:hover{background:#4a5952;border-color:var(--gold)}.duel-command kbd{font:10px ui-monospace;color:#e4d9a5}\n.duel-intent{padding:9px 14px;max-width:310px;min-width:145px;text-align:right;border-right:3px solid #d69d71}.duel-intent strong{display:block;font-size:14px}.duel-intent span{display:block;font-size:12px;color:#c7d3ca;margin-top:3px}\n.duel-float{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);font:700 clamp(20px,3vw,40px) ui-monospace,monospace;color:#fff5c7;text-shadow:0 2px 3px #15252c;pointer-events:none}\n.duel-result{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;padding:22px 27px;min-width:215px;border-top:2px solid var(--gold)}.duel-result h2{font:500 28px Georgia,serif;color:#f9edbe;margin:0 0 15px}.duel-outcomes{justify-content:center;gap:7px}\n.relay-duel [hidden]{display:none!important}\n@media(max-width:640px){.duel-dock{align-items:stretch;flex-direction:column-reverse;gap:5px;bottom:max(10px,env(safe-area-inset-bottom))}.duel-intent{align-self:flex-end;padding:5px 9px;min-width:0}.duel-intent strong,.duel-intent span{display:inline;font-size:11px}.duel-intent span{margin-left:6px}.duel-menu{width:100%;padding:8px 10px}.duel-commands{margin-top:6px}.duel-command{justify-content:center;flex:1;padding:8px 2px}.duel-command kbd{display:none}.duel-foe{padding:6px 9px}.duel-exit{width:32px;height:32px}}\n@media(max-height:440px){.duel-dock{bottom:6px}.duel-menu{padding:5px 9px}.duel-commands{margin-top:3px}.duel-command{padding:4px 8px}.duel-top{top:6px}}\n";
+const battleStyles=".relay-duel{--chalk:#fff9e9;--muted:#bcc9d7;--aqua:#9fe6dd;--gold:#ffda86;--shade:#171627;position:fixed;inset:0;overflow:hidden;isolation:isolate;background:#759cc3;font:20px/1.1 'Roost Menu',monospace;color:var(--chalk);cursor:default;touch-action:none}\n.relay-duel *{box-sizing:border-box}.relay-duel canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}.relay-duel canvas:active{cursor:grabbing}\n.relay-duel button{appearance:none;border:0;border-radius:0;background:none;color:inherit;font:inherit;cursor:pointer;text-shadow:inherit}\n.duel-top,.duel-dock,.duel-result,.duel-float{text-shadow:1px 1px var(--shade),2px 2px var(--shade)}\n.duel-top{position:absolute;inset:max(14px,env(safe-area-inset-top)) clamp(16px,3vw,40px) auto;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}\n.duel-foe{padding:7px 19px 8px 8px;background:linear-gradient(90deg,#111a2ba6 50%,transparent);min-width:150px}\n.duel-name,.duel-health,.duel-signal,.duel-outcomes{display:flex;align-items:baseline;gap:9px}\n.duel-name{font-size:20px}.duel-name small,.duel-health small{font:inherit;white-space:nowrap}\n.duel-name small{font-size:14px;color:#f2e3cf}.duel-bar{display:block;height:4px;box-shadow:0 1px #090e18;background:#273147}.duel-bar i{display:block;height:100%;background:#f3a176;transition:width .25s}\n.duel-foe .duel-bar{max-width:132px;margin:5px 0 7px}.duel-intent{font-size:15px;max-width:240px;color:#f7e9cd}.duel-intent strong{font-weight:400;color:var(--gold)}.duel-intent span:not(:empty)::before{content:' · '}\n.duel-exit{pointer-events:auto;font-size:16px!important;min-height:38px;padding:2px 5px;color:#fff8e6!important;text-shadow:-1px -1px #1a2630,1px -1px #1a2630,-1px 1px #1a2630,2px 2px #1a2630!important}\n.duel-exit:focus-visible,.duel-exit:hover{color:var(--gold)!important;text-decoration:underline}\n.duel-dock{position:absolute;bottom:max(17px,env(safe-area-inset-bottom));left:clamp(16px,3vw,40px);pointer-events:none}\n.duel-menu,.duel-result{border:2px solid #c3cad9;border-radius:2px;background:linear-gradient(115deg,#25395cf5,#1b2949f7 45%,#162039f7);box-shadow:inset 1px 1px #596884,inset -2px -2px #0b1127,1px 1px 0 1px #263044,2px 3px 0 1px #0e1723aa}\n.duel-menu{display:flex;align-items:stretch;padding:5px 3px;pointer-events:auto}\n.duel-commands{display:flex;flex-direction:column;justify-content:center;min-width:120px;padding:0 8px 0 3px}\n.duel-command,.duel-outcomes button{position:relative;text-align:left;font:inherit;color:var(--chalk);padding:3px 6px 3px 28px;line-height:1.12}\n.duel-command[aria-disabled=true]{color:#8995ab}.duel-command:focus,.duel-outcomes button:focus{outline:0}\n.duel-command::before,.duel-outcomes button::before{content:'';position:absolute;left:3px;top:50%;width:18px;height:12px;transform:translateY(-50%);background:linear-gradient(0deg,#a3b4c6 0 24%,#fff8dc 25% 67%,#fffef0 68%);clip-path:polygon(0 25%,22% 25%,22% 8%,50% 8%,50% 0,61% 0,61% 18%,96% 18%,96% 27%,100% 27%,100% 38%,61% 38%,61% 52%,73% 52%,73% 65%,63% 65%,63% 80%,50% 80%,50% 97%,19% 97%,19% 78%,0 78%);visibility:hidden}\n.duel-command.selected::before,.duel-outcomes button:focus-visible::before{visibility:visible}\n@media(hover:hover){.duel-commands:has(:hover) .duel-command::before{visibility:hidden}.duel-commands .duel-command:hover::before,.duel-outcomes button:hover::before{visibility:visible}}\n.duel-status{padding:4px 12px 4px 13px;border-left:1px solid #8490aa88;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:5px}\n.duel-status .duel-name{line-height:1;margin-bottom:4px}.duel-health,.duel-signal{align-items:center;justify-content:space-between;font-size:16px;gap:13px}\n.duel-health b,.duel-signal b{font-weight:400;color:var(--aqua)}.duel-health .duel-bar{width:55px;height:3px}.duel-health i{background:#92d7b6}\n.duel-signal span{color:var(--gold);letter-spacing:2px}.duel-float{position:absolute;transform:translate(-50%,-50%);font-size:32px;color:#fff5bc;pointer-events:none}\n.duel-result{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);padding:14px 23px;text-align:center}.duel-result h2{font:inherit;font-size:27px;color:var(--gold);margin:0 0 13px}.duel-outcomes{justify-content:center;gap:8px}.duel-outcomes button{white-space:nowrap;font-size:18px}\n.relay-duel [hidden]{display:none!important}\n@media(max-width:640px){.duel-dock{left:12px;bottom:max(13px,env(safe-area-inset-bottom))}.duel-top{left:8px;right:10px}.duel-intent{font-size:13px}.duel-menu{padding-block:3px}.duel-status{padding-inline:9px}.duel-health .duel-bar{width:34px}}\n@media(pointer:coarse){.duel-command,.duel-outcomes button{min-height:42px}.duel-exit{min-height:44px}.duel-command::before{width:15px}}\n@media(max-height:480px){.duel-dock{left:12px;bottom:8px}.duel-top{top:6px}.duel-command{min-height:25px;font-size:17px;padding-block:2px}.duel-name{font-size:17px}.duel-foe{padding-top:2px}.duel-status .duel-name{margin:0}}\n@media(prefers-reduced-motion:reduce){.duel-bar i{transition:none}}\n";
 // All geometry in the clearing uses metres. Leaf vertices carry individual wind weights.
 const TAU=Math.PI*2, clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n)),mix=(a,b,t)=>a+(b-a)*t;
 const add=(a,b,k=1)=>a.map((n,i)=>n+k*b[i]),sub=(a,b)=>add(a,b,-1),mul=(a,k)=>a.map(n=>n*k);
@@ -55,6 +55,17 @@ function floorY(x,z){
   const margin=clamp((Math.hypot(x,z)-2.7)/6);
   return margin*(.10*Math.sin(x*1.02+z*.48)+.15*Math.sin(z*.79)-.045*Math.min(25,Math.abs(z)));
 }
+const relayTower={site:[2.75,-1.85,-28],dishScale:2.36};
+function besideTower(x,z,height){
+  const [tx,,tz]=relayTower.site;
+  // Widen the opening beyond the concrete as the viewing rays diverge behind it.
+  // The last term covers lateral parallax at the extremes of the battle camera.
+  const ratio=(4.65-z)/(4.65-tz),center=tx*ratio;
+  const halfWidth=1.45*relayTower.dishScale*ratio+.34*height+.17*Math.abs(z-tz);
+  if(Math.abs(x-center)>=halfWidth)return x;
+  const side=x<center?-1:1,offset=.6+2.1*Math.abs(Math.sin(4.3*x+.81*z));
+  return center+side*(halfWidth+offset);
+}
 function makeClearing(world,low){
   const rand=rng(47119),between=(a,b)=>mix(a,b,rand()),pick=a=>a[Math.floor(rand()*a.length)];
   const land=new Geometry(),plants=new Geometry(),horizon=new Geometry(),clouds=new Geometry();
@@ -100,25 +111,38 @@ function makeClearing(world,low){
       }
     }
   }
-  for(let i=0;i<(low?105:236);i++){const z=between(-40,-10),x=between(-32,31);if(z>-27&&Math.abs(x-2.2)<4.8)continue;pine(x,z,between(2.4,6.3));}
-  // Volumes in the sky share the projection and drift slowly across the mountains.
+  for(let i=0;i<(low?105:236);i++){const z=between(-40,-10),x=between(-32,31);if(z>-27&&Math.abs(x-2.2)<4.8)continue;
+    const height=between(2.4,6.3);pine(besideTower(x,z,height),z,height);}
+  // A high rounded head, staggered shoulders and a low trailing shelf give each
+  // cloud a readable silhouette. Thumbprint-sized depressions separate the billows.
   clouds.kind=5;
-  for(const [cx,cy,cz,size] of [[-20,12,-48,5],[17,10,-47,5],[2,13,-62,4],[34,16,-59,7],[-37,13,-59,7],[-8,7,-40,2]]){
-    const lobes=[];
-    for(let j=0;j<13;j++){
-      const u=(j-6)/6,h=(.16+.28*(1-u*u))*between(.73,1.24);
-      lobes.push([u*1.36,.16*(1-u*u)+between(-.14,.19),between(-.21,.16),h*1.5,h,h*.9]);
-    }
-    // Extract one continuous cloud skin. Overlapping lobes merge along their density contour.
+  const banks=[[-15,10.1,-48,6.0,1,'crown'],[17,10.4,-47,5.4,-1,'bank'],[2,13,-62,4.1,-1,'wisp'],
+    [34,15,-59,6.2,1,'bank'],[-37,13,-59,7,-1,'crown'],[-7.2,6.9,-42,2.65,1,'wisp']];
+  const billows=[
+    [-1.26,-.018,.05,.36,.12,.26],[-1.07,.047,.01,.30,.22,.29],[-.82,.15,-.02,.34,.34,.41],
+    [-.54,.31,-.01,.42,.49,.44],[-.22,.20,-.10,.33,.33,.39],[.07,.12,-.08,.36,.31,.40],
+    [.39,.075,.012,.32,.23,.33],[.64,-.005,.045,.37,.15,.27],[1.0,-.04,.01,.53,.10,.23],
+    [1.38,-.060,-.02,.39,.060,.14],[-.64,.055,.30,.26,.22,.22],[-.21,.017,.32,.34,.18,.20],[.26,-.016,.25,.40,.13,.18]
+  ];
+  for(const [cx,cy,cz,size,direction,shape] of banks){
+    const lobes=billows.map(([x,y,z,rx,ry,rz])=>{
+      const swell=between(.85,1.15),rise=between(-.047,.047),depth=between(-.075,.075);
+      if(shape==='wisp')return [x*direction,.10*x+.10*Math.sin(2.8*x)+y*.22+rise*.5,z+depth,rx*1.17,ry*.34,rz*.67];
+      if(shape==='bank')return [x*direction,y*.57+rise,z+depth,rx*1.08,ry*swell*.82,rz];
+      return [x*direction,y+rise,z+depth,rx*swell,ry*swell,rz];
+    });
+    if(shape==='crown')lobes.push([-.61*direction,.56,-.10,.30,.41,.39],[-.25*direction,.37,-.11,.24,.40,.31],[.26*direction,.21,.11,.24,.24,.23]);
+    if(shape==='bank')lobes.push([.23*direction,.26,-.055,.35,.32,.30],[.55*direction,.22,-.12,.22,.32,.26],[-1.0*direction,.12,.08,.27,.21,.24]);
     function density(p){
       let sum=0;for(const b of lobes){const x=(p[0]-b[0])/b[3],y=(p[1]-b[1])/b[4],z=(p[2]-b[2])/b[5];
         const d=x*x+y*y+z*z;if(d<6)sum+=Math.exp(-2*d);}
-      return sum-.24;
+      const shelf=-.155+.030*p[0]*direction+.023*Math.sin(p[0]*4.3+p[2]);
+      return Math.min(sum-.235,(p[1]-shelf)*4.0);
     }
-    const dims=low?[23,11,9]:[46,21,17],values=[],positions=[];
+    const dims=low?[34,15,12]:[61,27,20],values=[],positions=[];
     const index=(i,j,k)=>i+dims[0]*(j+dims[1]*k);
     for(let k=0;k<dims[2];k++)for(let j=0;j<dims[1];j++)for(let i=0;i<dims[0];i++){
-      const p=[-1.94+3.88*i/(dims[0]-1),-.78+1.85*j/(dims[1]-1),-.90+1.8*k/(dims[2]-1)];positions.push(p);values.push(density(p));
+      const p=[-1.94+3.88*i/(dims[0]-1),-.32+1.53*j/(dims[1]-1),-.85+1.72*k/(dims[2]-1)];positions.push(p);values.push(density(p));
     }
     const offsets=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]],cache=new Map();
     const isopoint=(a,b)=>{
@@ -136,6 +160,21 @@ function makeClearing(world,low){
           const a=isopoint(on[0],off[0]),b=isopoint(on[0],off[1]),c=isopoint(on[1],off[1]),d=isopoint(on[1],off[0]);face.push(a,b,c,a,c,d);
         }else{const one=on.length===1?on[0]:off[0];for(const v of (on.length===1?off:on))face.push(isopoint(one,v));}
         for(const [p,n] of face)clouds.vertex(p,n,[252,247,223],0);
+      }
+    }
+    // Detached slivers beneath the shelf taper to a point in all three dimensions.
+    for(const [u,v,length,radius] of [[.88,-.28,1.12,.057],[-.75,-.24,.47,.035]]){
+      let last;
+      for(let i=0;i<=16;i++){
+        const t=i/16,k=Math.sin(Math.PI*t),width=k*(1.15-.48*t)*radius;
+        const x=cx+size*direction*(u+(t-.5)*length),y=cy+size*(v+t*.052-.020*k),z=cz+.15*size;
+        const ring=[];
+        for(let j=0;j<8;j++){const a=TAU*j/8;ring.push([x,y+size*width*Math.sin(a),z+size*width*3.1*Math.cos(a)])}
+        if(last)for(let j=0;j<8;j++){
+          const n=(j+1)%8,normal=norm([0,Math.sin((j+.5)*TAU/8),Math.cos((j+.5)*TAU/8)*.45]);
+          for(const p of [last[j],last[n],ring[n],last[j],ring[n],ring[j]])clouds.vertex(p,normal,[250,247,228],0);
+        }
+        last=ring;
       }
     }
   }
@@ -320,7 +359,12 @@ if(kind>.5&&kind<1.5){
 }
 if(kind>2.5&&kind<3.5)c*=.82+.22*wash(vec2(pos.x*7.+pos.z*6.,pos.y*.9))+.10*grain;
 if(kind>3.5&&kind<4.5)c=ink;
-if(kind>4.5)c=mix(vec3(.66,.77,.86),ink,smoothstep(-.58,.72,diffuse));
+if(kind>4.5){
+  float tone=diffuse+.32*normal.y;
+  c=mix(vec3(.61,.70,.85),vec3(.76,.84,.91),smoothstep(-.53,-.48,tone));
+  c=mix(c,vec3(.957,.949,.877),smoothstep(-.12,-.07,tone));
+  c=mix(c,vec3(1.,.989,.926),smoothstep(.57,.63,tone));
+}
 float dist=length(camera-pos);float fog=kind>4.5?.08:smoothstep(8.,70.,dist)*.67;c=mix(c,vec3(.68,.80,.86),fog);
 gl_FragColor=vec4(c,1.);}`;
 const splatVS=`precision highp float;
@@ -415,7 +459,10 @@ function softwareBattle(canvas){
       let r=d[i+6]*light,g=d[i+7]*light,b=d[i+8]*light;
       if(k===1){const path=clamp(1.28-Math.abs(oz+.18*ox+.24));r=mix(r,.69,path*.72);g=mix(g,.63,path*.72);b=mix(b,.42,path*.72);
         const sh=Math.max(0,1-Math.min(Math.hypot(ox-groundFeet[0],oz-groundFeet[1]),Math.hypot(ox-groundFeet[2],oz-groundFeet[3]))*2);light=1-.3*sh;r*=light;g*=light;b*=light;}
-      const fog=clamp((1/screen[2]-8)/73)*.58;
+      if(k===5){
+        const v=sun+.32*d[i+4];[r,g,b]=v<-.50?[.61,.70,.85]:v<-.10?[.76,.84,.91]:v<.60?[.957,.949,.877]:[1,.989,.926];
+      }
+      const fog=k===5?.08:clamp((1/screen[2]-8)/73)*.58;
       triangle(rgb(255*mix(r,.68,fog),255*mix(g,.80,fog),255*mix(b,.86,fog)));
     }
   },actor(actor){const d=actor.packed;
@@ -431,10 +478,10 @@ function softwareBattle(canvas){
 function createYardBattle({world,actor,reduced,leave}){
   const root=document.createElement('section');root.className='relay-duel';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Relay clearing duel');
   root.innerHTML='<style>'+battleStyles+'</style><canvas tabindex="-1" aria-label="Three-dimensional relay clearing. Drag to look around the fighters."></canvas>'+
-    '<div class="duel-top"><div class="duel-foe"><div class="duel-name">Yard robot <small data-foehp></small></div><span class="duel-bar"><i data-foebar></i></span></div><button class="duel-exit" aria-label="Return to the tree" title="Return to the tree (Esc)">×</button></div>'+
-    '<div class="duel-dock"><div class="duel-menu"><div class="duel-status"><div class="duel-health">Traveler <small data-hp></small><span class="duel-bar"><i data-hpbar></i></span></div><span class="duel-signal" data-signal></span></div><div class="duel-commands">'+
-    ['Strike','Brace','Birdcall'].map((a,i)=>'<button class="duel-command" data-act="'+i+'" title="'+['Heel kick. Builds one signal.','Guard the next hit. Builds one signal on contact.','Spend two signal to summon the kingfisher. Strong against the exposed coil.'][i]+'"><kbd>'+(i+1)+'</kbd>'+a+'</button>').join('')+
-    '</div></div><div class="duel-intent" aria-live="polite"><strong></strong><span></span></div></div><div class="duel-float" aria-hidden="true" hidden></div>'+
+    '<div class="duel-top"><div class="duel-foe"><div class="duel-name">Yard robot <small data-foehp></small></div><span class="duel-bar"><i data-foebar></i></span><div class="duel-intent" aria-live="polite"><strong></strong><span></span></div></div><button class="duel-exit" aria-label="Return to the tree" title="Return to the tree (Esc)">‹ Leave</button></div>'+
+    '<div class="duel-dock"><div class="duel-menu"><div class="duel-commands" role="group" aria-label="Battle commands">'+
+    ['Strike','Brace','Birdcall'].map((a,i)=>'<button class="duel-command" data-act="'+i+'" aria-keyshortcuts="'+(i+1)+'" title="'+(i+1)+' · '+['Heel kick. Builds one signal.','Guard the next hit. Builds one signal on contact.','Spend two signal to summon the kingfisher. Strong against the exposed coil.'][i]+'">'+a+'</button>').join('')+
+    '</div><div class="duel-status"><div class="duel-name">Traveler</div><div class="duel-health"><b>HP</b><small data-hp></small><span class="duel-bar"><i data-hpbar></i></span></div><div class="duel-signal"><b>Signal</b><span data-signal></span></div></div></div></div><div class="duel-float" aria-hidden="true" hidden></div>'+
     '<div class="duel-result" hidden><h2></h2><div class="duel-outcomes"><button data-retry>Retry</button><button data-leave>Return to tree</button></div></div>';
   const $=s=>root.querySelector(s),canvas=$('canvas'),buttons=[...root.querySelectorAll('[data-act]')];
   const gl=canvas.getContext('webgl',{alpha:false,depth:true,antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
@@ -446,7 +493,7 @@ function createYardBattle({world,actor,reduced,leave}){
       wing.quad(a,b,c,d,j%2?[151,173,170]:[218,214,178]);}
     wings.push(wing.finish());
   }
-  const ladder=new Geometry();const site=[2.75,-1.85,-28],dishScale=2.36;
+  const ladder=new Geometry();const {site,dishScale}=relayTower;
   for(const x of [-.36,.36])ladder.tube([site[0]+x,.05,site[2]+1.4],[site[0]+x,5.14,site[2]+1.4],.040,.040,[131,136,117],7);
   for(let k=0;k<21;k++)ladder.tube([site[0]-.36,.15+k*.24,site[2]+1.4],[site[0]+.36,.15+k*.24,site[2]+1.4],.031,.031,[172,150,101],6);
   ladder.finish();
@@ -455,11 +502,17 @@ function createYardBattle({world,actor,reduced,leave}){
   const attacks=['Strike','Brace','Birdcall'];let hp,foe,signal,round,phase,action,elapsed,resolved,hitLabel,hitTime,targetHit,result;
   let active=true,raf=0,stamp=0,time=0,view=0,tilt=0,viewGoal=0,tiltGoal=0,drag=null,audio=null;
 
+  let selectedCommand=0;
+  function selectCommand(index){
+    selectedCommand=index;buttons.forEach((button,i)=>button.classList.toggle('selected',i===index));
+  }
+  buttons.forEach((button,i)=>button.addEventListener('focus',()=>selectCommand(i)));
+  selectCommand(0);
   const focusButton=()=>{(result?$(result==='Victory'?'[data-leave]':'[data-retry]'):buttons[0]).focus({preventScroll:true})};
   function hud(){
     $('[data-foehp]').textContent=foe+' / 72';$('[data-foebar]').style.width=(100*foe/72)+'%';
     $('[data-hp]').textContent=hp+' / 40';$('[data-hpbar]').style.width=(100*hp/40)+'%';
-    $('[data-signal]').textContent='Signal '+('◆'.repeat(signal))+('◇'.repeat(2-signal));$('[data-signal]').setAttribute('aria-label',signal+' of 2 signal');
+    $('[data-signal]').textContent=('◆'.repeat(signal))+('◇'.repeat(2-signal));$('[data-signal]').setAttribute('aria-label',signal+' of 2 signal');
     buttons.forEach((b,i)=>b.setAttribute('aria-disabled',String(phase!=='choose'||(i===2&&signal<2))));
     const intent=intents[round%3];$('.duel-intent strong').textContent=phase==='hero'?attacks[action]:intent[0];
     $('.duel-intent span').textContent=phase==='hero'?(action===2?'Kingfisher inbound.':action===1?'Holding guard.':'Closing in.') :intent[1];
@@ -566,7 +619,7 @@ function createYardBattle({world,actor,reduced,leave}){
     if(e.repeat)return;
     if(/^[123]$/.test(e.key)){e.preventDefault();pick(Number(e.key)-1)}
     if(phase==='choose'&&(e.key==='ArrowDown'||e.key==='ArrowUp'||e.key==='ArrowRight'||e.key==='ArrowLeft')){
-      e.preventDefault();const dir=e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1;buttons[(Math.max(0,buttons.indexOf(document.activeElement))+dir+3)%3].focus();
+      e.preventDefault();const dir=e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1;buttons[(selectedCommand+dir+3)%3].focus();
     }
     if(e.key==='Tab'){
       const list=result?[...root.querySelectorAll('.duel-result button:not([hidden]),.duel-exit')]:[...buttons,$('.duel-exit')];
